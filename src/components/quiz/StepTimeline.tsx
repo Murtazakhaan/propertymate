@@ -1,12 +1,9 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuiz } from "@/contexts/QuizContext";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, Sparkles, Clock, Zap, CalendarDays, CalendarRange, Loader2 } from "lucide-react";
+import { ArrowLeft, Sparkles, Clock, Zap, CalendarDays, CalendarRange } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { submitQuizAndAnalyze } from "@/lib/api/analyze";
-import { useToast } from "@/hooks/use-toast";
 
 const timelines = [
   { value: "0-3" as const, label: "0–3 months", description: "Ready to act now", icon: Zap },
@@ -18,24 +15,10 @@ const timelines = [
 const StepTimeline = () => {
   const { answers, updateAnswers, setCurrentStep } = useQuiz();
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async () => {
-    setIsSubmitting(true);
-    try {
-      const { submissionId } = await submitQuizAndAnalyze(answers);
-      navigate(`/results?id=${submissionId}`);
-    } catch (err: any) {
-      console.error("Submit error:", err);
-      toast({
-        title: "Analysis failed",
-        description: err.message || "Something went wrong. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+  const handleSubmit = () => {
+    // TODO: Submit to Supabase + call edge function
+    navigate("/results");
   };
 
   return (
@@ -53,8 +36,7 @@ const StepTimeline = () => {
               "p-5 cursor-pointer transition-all border-2 text-center",
               answers.timeline === t.value
                 ? "border-primary bg-primary/5"
-                : "border-transparent hover:border-primary/30",
-              isSubmitting && "pointer-events-none opacity-60"
+                : "border-transparent hover:border-primary/30"
             )}
             onClick={() => updateAnswers({ timeline: t.value })}
           >
@@ -69,27 +51,18 @@ const StepTimeline = () => {
       </div>
 
       <div className="flex justify-between">
-        <Button variant="outline" size="lg" onClick={() => setCurrentStep(3)} disabled={isSubmitting}>
+        <Button variant="outline" size="lg" onClick={() => setCurrentStep(3)}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back
         </Button>
         <Button
           size="lg"
-          disabled={!answers.timeline || isSubmitting}
+          disabled={!answers.timeline}
           onClick={handleSubmit}
           className="font-semibold"
         >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Analysing…
-            </>
-          ) : (
-            <>
-              <Sparkles className="mr-2 h-4 w-4" />
-              Find My Suburbs
-            </>
-          )}
+          <Sparkles className="mr-2 h-4 w-4" />
+          Find My Suburbs
         </Button>
       </div>
     </div>

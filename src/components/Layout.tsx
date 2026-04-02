@@ -1,10 +1,9 @@
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useState } from "react";
-import { Menu, X, BarChart3, BookOpen, Info, LogIn, LogOut, User } from "lucide-react";
+import { Menu, X, BarChart3, BookOpen, Info, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { useAuth } from "@/contexts/AuthContext";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -20,16 +19,10 @@ const navLinks = [
 const Layout = ({ children, beginnerMode, onToggleBeginnerMode }: LayoutProps) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
-  const navigate = useNavigate();
-  const { user, signOut } = useAuth();
-
-  const handleSignOut = async () => {
-    await signOut();
-    navigate("/");
-  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      {/* Header */}
       <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
@@ -39,6 +32,7 @@ const Layout = ({ children, beginnerMode, onToggleBeginnerMode }: LayoutProps) =
             </span>
           </Link>
 
+          {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-6">
             <div className="flex items-center gap-2 mr-4">
               <Switch
@@ -61,27 +55,15 @@ const Layout = ({ children, beginnerMode, onToggleBeginnerMode }: LayoutProps) =
                 {link.label}
               </Link>
             ))}
-            {user ? (
-              <div className="flex items-center gap-3">
-                <span className="text-sm text-muted-foreground flex items-center gap-1.5">
-                  <User className="h-4 w-4" />
-                  {user.email}
-                </span>
-                <Button variant="outline" size="sm" onClick={handleSignOut}>
-                  <LogOut className="h-4 w-4 mr-1.5" />
-                  Sign Out
-                </Button>
-              </div>
-            ) : (
-              <Link to="/login">
-                <Button variant="outline" size="sm">
-                  <LogIn className="h-4 w-4 mr-1.5" />
-                  Sign In
-                </Button>
-              </Link>
-            )}
+            <Link to="/login">
+              <Button variant="outline" size="sm">
+                <LogIn className="h-4 w-4 mr-1.5" />
+                Sign In
+              </Button>
+            </Link>
           </nav>
 
+          {/* Mobile menu button */}
           <button
             className="md:hidden p-2"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -90,6 +72,7 @@ const Layout = ({ children, beginnerMode, onToggleBeginnerMode }: LayoutProps) =
           </button>
         </div>
 
+        {/* Mobile menu */}
         {mobileMenuOpen && (
           <div className="md:hidden border-t bg-background px-4 py-4 space-y-4">
             <div className="flex items-center gap-2">
@@ -112,28 +95,20 @@ const Layout = ({ children, beginnerMode, onToggleBeginnerMode }: LayoutProps) =
                 {link.label}
               </Link>
             ))}
-            {user ? (
-              <>
-                <p className="text-sm text-muted-foreground">{user.email}</p>
-                <Button variant="outline" size="sm" className="w-full" onClick={() => { handleSignOut(); setMobileMenuOpen(false); }}>
-                  <LogOut className="h-4 w-4 mr-1.5" />
-                  Sign Out
-                </Button>
-              </>
-            ) : (
-              <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
-                <Button variant="outline" size="sm" className="w-full">
-                  <LogIn className="h-4 w-4 mr-1.5" />
-                  Sign In
-                </Button>
-              </Link>
-            )}
+            <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
+              <Button variant="outline" size="sm" className="w-full">
+                <LogIn className="h-4 w-4 mr-1.5" />
+                Sign In
+              </Button>
+            </Link>
           </div>
         )}
       </header>
 
+      {/* Main content */}
       <main className="flex-1">{children}</main>
 
+      {/* Footer */}
       <footer className="border-t bg-muted/50">
         <div className="container py-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
