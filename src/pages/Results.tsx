@@ -154,7 +154,7 @@ const Results = () => {
         <p className="text-muted-foreground">{error}</p>
         <div className="flex gap-3 justify-center">
           <Button onClick={fetchResults} variant="outline"><RotateCcw className="mr-2 h-4 w-4" />Try Again</Button>
-          <Link to="/quiz"><Button><ArrowLeft className="mr-2 h-4 w-4" />Retake Quiz</Button></Link>
+          <Link to="/quiz"><Button><ArrowLeft className="mr-2 h-4 w-4" />Start Over</Button></Link>
         </div>
       </div>
     );
