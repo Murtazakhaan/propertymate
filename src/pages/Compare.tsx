@@ -160,13 +160,15 @@ const Compare = () => {
               highlight="lowest"
               rawValues={suburbs.map((s) => s.median_price)}
             />
-            <MetricRow
-              label={labels.rentalYield}
-              icon={TrendingUp}
-              values={suburbs.map((s) => formatPct(s.rental_yield))}
-              highlight="highest"
-              rawValues={suburbs.map((s) => s.rental_yield)}
-            />
+            {!isOwnerOccupier && (
+              <MetricRow
+                label={labels.rentalYield}
+                icon={TrendingUp}
+                values={suburbs.map((s) => formatPct(s.rental_yield))}
+                highlight="highest"
+                rawValues={suburbs.map((s) => s.rental_yield)}
+              />
+            )}
             <MetricRow
               label={labels.vacancyRate}
               icon={AlertTriangle}
