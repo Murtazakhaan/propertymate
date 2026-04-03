@@ -64,7 +64,7 @@ const MetricRow = ({ label, icon: Icon, values, highlight, rawValues }: MetricRo
             i === bestIdx ? "text-primary font-bold" : "text-foreground"
           )}
         >
-          {val ?? "—"}
+          {val ?? "-"}
         </td>
       ))}
     </tr>
