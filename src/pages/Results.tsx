@@ -58,6 +58,15 @@ interface PropertyListing {
   image_url: string | null;
 }
 
+const buildRealEstateUrl = (suburb: SuburbResult, budget: number | null) => {
+  const suburbSlug = suburb.suburb_name.toLowerCase().replace(/\s+/g, "-");
+  const stateMap: Record<string, string> = { NSW: "nsw", VIC: "vic", QLD: "qld", WA: "wa", SA: "sa", TAS: "tas", ACT: "act", NT: "nt" };
+  const stateSlug = stateMap[suburb.state] || suburb.state.toLowerCase();
+  let url = `https://www.realestate.com.au/buy/in-${suburbSlug},+${stateSlug}+${suburb.postcode ?? ""}/list-1`;
+  if (budget) url += `?maxPrice=${budget}`;
+  return url;
+};
+
 const Results = () => {
   const { answers } = useQuiz();
   const { beginnerMode } = useApp();
