@@ -63,28 +63,31 @@ const Layout = ({ children, beginnerMode, onToggleBeginnerMode }: LayoutProps) =
             </Link>
           </nav>
 
-          {/* Mobile menu button */}
-          <button
-            className="md:hidden p-2"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          >
-            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
+          {/* Mobile: beginner toggle + hamburger */}
+          <div className="md:hidden flex items-center gap-3">
+            <div className="flex items-center gap-1.5">
+              <Switch
+                id="beginner-mode-header"
+                checked={beginnerMode}
+                onCheckedChange={onToggleBeginnerMode}
+                className="scale-90"
+              />
+              <Label htmlFor="beginner-mode-header" className="text-xs text-muted-foreground cursor-pointer whitespace-nowrap">
+                Beginner
+              </Label>
+            </div>
+            <button
+              className="p-2"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+          </div>
         </div>
 
         {/* Mobile menu */}
         {mobileMenuOpen && (
           <div className="md:hidden border-t bg-background px-4 py-4 space-y-4">
-            <div className="flex items-center gap-2">
-              <Switch
-                id="beginner-mode-mobile"
-                checked={beginnerMode}
-                onCheckedChange={onToggleBeginnerMode}
-              />
-              <Label htmlFor="beginner-mode-mobile" className="text-sm text-muted-foreground">
-                Beginner Mode
-              </Label>
-            </div>
             {navLinks.map((link) => (
               <Link
                 key={link.to}
