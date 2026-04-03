@@ -24,7 +24,7 @@ const valueProps = [
 const steps = [
   { number: "1", title: "Tell us your goals", description: "First home or investment? What's your budget and timeline?" },
   { number: "2", title: "Set your preferences", description: "Risk tolerance, location flexibility, property age — we tailor results to you." },
-  { number: "3", title: "Get matched suburbs", description: "Our AI ranks suburbs with match scores, risk flags, and financial breakdowns." },
+  { number: "3", title: "Get matched suburbs", description: "Suburbs are ranked with match scores, risk flags, and financial breakdowns." },
 ];
 
 const Index = () => {
