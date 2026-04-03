@@ -76,7 +76,9 @@ const Compare = () => {
   const navigate = useNavigate();
   const { beginnerMode } = useApp();
   const suburbs: SuburbResult[] = location.state?.suburbs ?? [];
+  const goal: string | null = location.state?.goal ?? null;
   const labels = metricLabels(beginnerMode);
+  const isOwnerOccupier = goal === "first-home";
 
   const riskConfig = {
     low: { color: "bg-green-100 text-green-800", icon: Shield, label: labels.riskLow },
