@@ -63,13 +63,26 @@ const Layout = ({ children, beginnerMode, onToggleBeginnerMode }: LayoutProps) =
             </Link>
           </nav>
 
-          {/* Mobile menu button */}
-          <button
-            className="md:hidden p-2"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          >
-            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
+          {/* Mobile: beginner toggle + hamburger */}
+          <div className="md:hidden flex items-center gap-3">
+            <div className="flex items-center gap-1.5">
+              <Switch
+                id="beginner-mode-header"
+                checked={beginnerMode}
+                onCheckedChange={onToggleBeginnerMode}
+                className="scale-90"
+              />
+              <Label htmlFor="beginner-mode-header" className="text-xs text-muted-foreground cursor-pointer whitespace-nowrap">
+                Beginner
+              </Label>
+            </div>
+            <button
+              className="p-2"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+          </div>
         </div>
 
         {/* Mobile menu */}
