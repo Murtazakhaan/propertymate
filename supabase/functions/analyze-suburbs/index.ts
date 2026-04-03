@@ -71,8 +71,10 @@ INVESTOR PROFILE:
 
 For each suburb provide:
 - ${params.investor_strategy === "capital-growth" ? "Focus on capital growth rate, population growth, and upcoming infrastructure" : "Focus on rental yield, vacancy rate, and rental income potential"}
+- Stamp duty estimate for that state
 - Infrastructure projects in the area that could boost property values
-- 5 realistic investment property listings matching the budget (realistic addresses, prices, bedroom/bathroom counts, property type, expected weekly rent)
+- Separate weekly rental return for houses and units (house_weekly_rent, unit_weekly_rent)
+- 5 realistic investment property listings matching the budget (realistic addresses, prices, bedroom/bathroom counts, property type House or Unit, expected weekly rent)
 
 Match scores should reflect ${params.investor_strategy === "capital-growth" ? "growth potential and infrastructure development" : "rental yield and tenant demand"}.`;
 }
