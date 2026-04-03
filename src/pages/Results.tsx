@@ -139,9 +139,9 @@ const Results = () => {
     return (
       <div className="container max-w-4xl py-10 md:py-16 text-center space-y-6">
         <h1 className="text-2xl font-bold text-foreground">No quiz data found</h1>
-        <p className="text-muted-foreground">Please complete the quiz first so we can analyse suburbs for you.</p>
+        <p className="text-muted-foreground">Tell us what you're looking for so we can find the right suburbs for you.</p>
         <Link to="/quiz">
-          <Button size="lg"><ArrowLeft className="mr-2 h-4 w-4" />Take the Quiz</Button>
+          <Button size="lg"><ArrowLeft className="mr-2 h-4 w-4" />Find My Property</Button>
         </Link>
       </div>
     );
