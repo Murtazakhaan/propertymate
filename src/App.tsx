@@ -11,6 +11,7 @@ import Quiz from "./pages/Quiz";
 import Results from "./pages/Results";
 import About from "./pages/About";
 import Glossary from "./pages/Glossary";
+import Compare from "./pages/Compare";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 
@@ -25,6 +26,7 @@ const AppContent = () => {
         <Route path="/" element={<Index />} />
         <Route path="/quiz" element={<Quiz />} />
         <Route path="/results" element={<Results />} />
+        <Route path="/compare" element={<Compare />} />
         <Route path="/about" element={<About />} />
         <Route path="/glossary" element={<Glossary />} />
         <Route path="/login" element={<Login />} />
