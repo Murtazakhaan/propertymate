@@ -33,4 +33,7 @@ export const metricLabels = (beginner: boolean) => ({
   shoppingCentre: beginner ? "Closest shops" : "Nearest Shopping Centre",
   // Investor specific
   infrastructureProjects: beginner ? "Upcoming projects nearby" : "Infrastructure Projects",
+  houseRentalReturn: beginner ? "House rent per week" : "House Weekly Rent",
+  unitRentalReturn: beginner ? "Unit rent per week" : "Unit Weekly Rent",
+  browseListings: beginner ? "See real listings" : "Browse on realestate.com.au",
 });
