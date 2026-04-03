@@ -344,6 +344,8 @@ serve(async (req) => {
       crime_rate_level: s.crime_rate_level ?? null,
       nearest_shopping_centre: s.nearest_shopping_centre ?? null,
       infrastructure_projects: s.infrastructure_projects ?? null,
+      house_weekly_rent: s.house_weekly_rent ?? null,
+      unit_weekly_rent: s.unit_weekly_rent ?? null,
     }));
 
     const { data: savedResults, error: resultsError } = await supabaseAdmin
