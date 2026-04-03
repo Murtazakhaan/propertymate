@@ -6,8 +6,8 @@ import { Brain, BookOpen, TrendingUp, ArrowRight, Shield, Sparkles } from "lucid
 const valueProps = [
   {
     icon: Brain,
-    title: "AI-Powered Analysis",
-    description: "Our AI evaluates hundreds of suburbs against your goals, budget, and risk appetite to surface the best matches.",
+    title: "Smart Suburb Matching",
+    description: "We evaluate hundreds of suburbs against your goals, budget, and risk appetite to find the best fit.",
   },
   {
     icon: BookOpen,
@@ -16,8 +16,8 @@ const valueProps = [
   },
   {
     icon: TrendingUp,
-    title: "Data-Driven Results",
-    description: "Every recommendation is backed by real market data — median prices, rental yields, vacancy rates, and growth trends.",
+    title: "Real Market Data",
+    description: "Every recommendation is backed by actual market data including median prices, rental yields, vacancy rates, and growth trends.",
   },
 ];
 
