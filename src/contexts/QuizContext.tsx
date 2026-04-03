@@ -2,24 +2,34 @@ import { createContext, useContext, useState, ReactNode } from "react";
 
 export interface QuizAnswers {
   goal: "first-home" | "investment" | "not-sure" | null;
+  isFirstHome: boolean | null;
+  investorStrategy: "capital-growth" | "rental-return" | null;
   budget: number | null;
   budgetUnknown: boolean;
   income: number | null;
   deposit: number | null;
   hasExistingHome: boolean | null;
+  existingPropertyAddress: string;
+  existingPropertyValue: number | null;
+  existingLoanAmount: number | null;
   interstateOpen: boolean;
   homeAgePreference: "new" | "established" | "no-preference" | null;
-  riskTolerance: number; // 0 (low risk) to 100 (high growth)
+  riskTolerance: number;
   timeline: "0-3" | "3-6" | "6-12" | "12+" | null;
 }
 
 const defaultAnswers: QuizAnswers = {
   goal: null,
+  isFirstHome: null,
+  investorStrategy: null,
   budget: null,
   budgetUnknown: false,
   income: null,
   deposit: null,
   hasExistingHome: null,
+  existingPropertyAddress: "",
+  existingPropertyValue: null,
+  existingLoanAmount: null,
   interstateOpen: false,
   homeAgePreference: null,
   riskTolerance: 50,
