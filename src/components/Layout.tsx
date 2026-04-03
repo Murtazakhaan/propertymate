@@ -88,16 +88,6 @@ const Layout = ({ children, beginnerMode, onToggleBeginnerMode }: LayoutProps) =
         {/* Mobile menu */}
         {mobileMenuOpen && (
           <div className="md:hidden border-t bg-background px-4 py-4 space-y-4">
-            <div className="flex items-center gap-2">
-              <Switch
-                id="beginner-mode-mobile"
-                checked={beginnerMode}
-                onCheckedChange={onToggleBeginnerMode}
-              />
-              <Label htmlFor="beginner-mode-mobile" className="text-sm text-muted-foreground">
-                Beginner Mode
-              </Label>
-            </div>
             {navLinks.map((link) => (
               <Link
                 key={link.to}
