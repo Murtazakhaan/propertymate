@@ -269,7 +269,7 @@ const Results = () => {
       <div className="flex justify-center gap-3 mt-10">
         <Link to="/quiz">
           <Button variant="outline" size="lg">
-            <RotateCcw className="mr-2 h-4 w-4" />Retake Quiz
+            <RotateCcw className="mr-2 h-4 w-4" />Start Over
           </Button>
         </Link>
       </div>
