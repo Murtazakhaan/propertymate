@@ -26,10 +26,10 @@ interface SuburbResult {
   reasoning: string | null;
 }
 
-const formatPrice = (v: number | null) => (v != null ? `$${(v / 1000).toFixed(0)}k` : "—");
-const formatPct = (v: number | null) => (v != null ? `${v}%` : "—");
-const formatNum = (v: number | null) => (v != null ? `${v}` : "—");
-const formatDollar = (v: number | null) => (v != null ? `$${v}` : "—");
+const formatPrice = (v: number | null) => (v != null ? `$${(v / 1000).toFixed(0)}k` : "-");
+const formatPct = (v: number | null) => (v != null ? `${v}%` : "-");
+const formatNum = (v: number | null) => (v != null ? `${v}` : "-");
+const formatDollar = (v: number | null) => (v != null ? `$${v}` : "-");
 
 interface MetricRowProps {
   label: string;
