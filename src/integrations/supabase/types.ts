@@ -68,6 +68,53 @@ export type Database = {
         }
         Relationships: []
       }
+      property_listings: {
+        Row: {
+          address: string
+          bathrooms: number | null
+          bedrooms: number | null
+          created_at: string
+          id: string
+          image_url: string | null
+          link: string | null
+          price: number
+          property_type: string | null
+          suburb_result_id: string
+        }
+        Insert: {
+          address: string
+          bathrooms?: number | null
+          bedrooms?: number | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          link?: string | null
+          price: number
+          property_type?: string | null
+          suburb_result_id: string
+        }
+        Update: {
+          address?: string
+          bathrooms?: number | null
+          bedrooms?: number | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          link?: string | null
+          price?: number
+          property_type?: string | null
+          suburb_result_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_listings_suburb_result_id_fkey"
+            columns: ["suburb_result_id"]
+            isOneToOne: false
+            referencedRelation: "suburb_results"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quiz_submissions: {
         Row: {
           budget_max: number | null
@@ -75,11 +122,16 @@ export type Database = {
           budget_unknown: boolean | null
           created_at: string
           deposit: number | null
+          existing_loan_amount: number | null
+          existing_property_address: string | null
+          existing_property_value: number | null
           goal: string
           has_existing_home: boolean | null
           home_age_preference: string | null
           id: string
           income: number | null
+          investor_strategy: string | null
+          is_first_home: boolean | null
           open_to_interstate: boolean | null
           risk_growth_preference: number | null
           timeline: string
@@ -91,11 +143,16 @@ export type Database = {
           budget_unknown?: boolean | null
           created_at?: string
           deposit?: number | null
+          existing_loan_amount?: number | null
+          existing_property_address?: string | null
+          existing_property_value?: number | null
           goal: string
           has_existing_home?: boolean | null
           home_age_preference?: string | null
           id?: string
           income?: number | null
+          investor_strategy?: string | null
+          is_first_home?: boolean | null
           open_to_interstate?: boolean | null
           risk_growth_preference?: number | null
           timeline: string
@@ -107,11 +164,16 @@ export type Database = {
           budget_unknown?: boolean | null
           created_at?: string
           deposit?: number | null
+          existing_loan_amount?: number | null
+          existing_property_address?: string | null
+          existing_property_value?: number | null
           goal?: string
           has_existing_home?: boolean | null
           home_age_preference?: string | null
           id?: string
           income?: number | null
+          investor_strategy?: string | null
+          is_first_home?: boolean | null
           open_to_interstate?: boolean | null
           risk_growth_preference?: number | null
           timeline?: string
@@ -154,12 +216,19 @@ export type Database = {
       suburb_results: {
         Row: {
           best_for_tag: string | null
+          capital_growth_rate: number | null
           confidence: string | null
           created_at: string
+          crime_rate_level: string | null
           days_on_market: number | null
+          has_train_station: boolean | null
           id: string
+          infrastructure_projects: string | null
           match_score: number
           median_price: number | null
+          nearest_hospital: string | null
+          nearest_shopping_centre: string | null
+          num_schools: number | null
           population_growth: number | null
           postcode: string | null
           quiz_submission_id: string
@@ -168,6 +237,7 @@ export type Database = {
           rental_range_low: number | null
           rental_yield: number | null
           risk_level: string
+          stamp_duty_estimate: number | null
           state: string
           suburb_name: string
           vacancy_rate: number | null
@@ -175,12 +245,19 @@ export type Database = {
         }
         Insert: {
           best_for_tag?: string | null
+          capital_growth_rate?: number | null
           confidence?: string | null
           created_at?: string
+          crime_rate_level?: string | null
           days_on_market?: number | null
+          has_train_station?: boolean | null
           id?: string
+          infrastructure_projects?: string | null
           match_score?: number
           median_price?: number | null
+          nearest_hospital?: string | null
+          nearest_shopping_centre?: string | null
+          num_schools?: number | null
           population_growth?: number | null
           postcode?: string | null
           quiz_submission_id: string
@@ -189,6 +266,7 @@ export type Database = {
           rental_range_low?: number | null
           rental_yield?: number | null
           risk_level?: string
+          stamp_duty_estimate?: number | null
           state: string
           suburb_name: string
           vacancy_rate?: number | null
@@ -196,12 +274,19 @@ export type Database = {
         }
         Update: {
           best_for_tag?: string | null
+          capital_growth_rate?: number | null
           confidence?: string | null
           created_at?: string
+          crime_rate_level?: string | null
           days_on_market?: number | null
+          has_train_station?: boolean | null
           id?: string
+          infrastructure_projects?: string | null
           match_score?: number
           median_price?: number | null
+          nearest_hospital?: string | null
+          nearest_shopping_centre?: string | null
+          num_schools?: number | null
           population_growth?: number | null
           postcode?: string | null
           quiz_submission_id?: string
@@ -210,6 +295,7 @@ export type Database = {
           rental_range_low?: number | null
           rental_yield?: number | null
           risk_level?: string
+          stamp_duty_estimate?: number | null
           state?: string
           suburb_name?: string
           vacancy_rate?: number | null

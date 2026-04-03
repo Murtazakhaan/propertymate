@@ -23,4 +23,14 @@ export const metricLabels = (beginner: boolean) => ({
   compareDesc: beginner
     ? "See how your picked suburbs stack up against each other"
     : "Side-by-side comparison of your selected suburbs",
+  // Owner occupier specific
+  stampDuty: beginner ? "Stamp duty (approx.)" : "Stamp Duty Estimate",
+  capitalGrowth: beginner ? "Value increase per year" : "Capital Growth Rate",
+  nearestHospital: beginner ? "Closest hospital" : "Nearest Hospital",
+  numSchools: beginner ? "Schools nearby" : "Number of Schools",
+  trainStation: beginner ? "Train station?" : "Train Station",
+  crimeRate: beginner ? "Safety level" : "Crime Rate",
+  shoppingCentre: beginner ? "Closest shops" : "Nearest Shopping Centre",
+  // Investor specific
+  infrastructureProjects: beginner ? "Upcoming projects nearby" : "Infrastructure Projects",
 });
