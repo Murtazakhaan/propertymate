@@ -118,7 +118,7 @@ const Index = () => {
           <div className="text-center mt-12">
             <Link to="/quiz">
               <Button size="lg" className="font-semibold">
-                Get Started, It's Free
+                Find My Property
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>

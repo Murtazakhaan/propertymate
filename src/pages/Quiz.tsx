@@ -21,7 +21,7 @@ const Quiz = () => {
       {/* Progress */}
       <div className="mb-8">
         <div className="flex justify-between text-sm text-muted-foreground mb-2">
-          <span>Step {currentStep} of {totalSteps}</span>
+          <span>Question {currentStep} of {totalSteps}</span>
           <span>{Math.round(progress)}% complete</span>
         </div>
         <Progress value={progress} className="h-2" />
