@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Loader2, MapPin, TrendingUp, Home, Clock, AlertTriangle, Shield, Zap, RotateCcw } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ArrowLeft, Loader2, MapPin, TrendingUp, Home, Clock, AlertTriangle, Shield, Zap, RotateCcw, GitCompareArrows } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuiz } from "@/contexts/QuizContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -42,6 +43,7 @@ const Results = () => {
   const [results, setResults] = useState<SuburbResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!answers.goal || !answers.timeline) {
@@ -87,6 +89,27 @@ const Results = () => {
     }
   };
 
+  const toggleSelect = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        if (next.size >= 3) {
+          toast({ title: "Max 3 suburbs", description: "Deselect one before adding another." });
+          return prev;
+        }
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const handleCompare = () => {
+    const suburbs = results.filter((r) => selected.has(r.id));
+    navigate("/compare", { state: { suburbs } });
+  };
+
   if (loading) {
     return (
       <div className="container max-w-4xl py-10 md:py-16">
@@ -126,6 +149,8 @@ const Results = () => {
     );
   }
 
+  const sortedResults = [...results].sort((a, b) => b.match_score - a.match_score);
+
   return (
     <div className="container max-w-5xl py-10 md:py-16">
       <div className="text-center space-y-2 mb-10">
@@ -133,81 +158,101 @@ const Results = () => {
         <p className="text-muted-foreground">Based on your profile, here are the suburbs that best fit your criteria.</p>
       </div>
 
+      {/* Compare floating bar */}
+      {selected.size >= 2 && (
+        <div className="sticky top-4 z-20 mb-6 flex items-center justify-between bg-primary text-primary-foreground rounded-lg px-5 py-3 shadow-lg">
+          <span className="text-sm font-medium">{selected.size} suburbs selected</span>
+          <Button size="sm" variant="secondary" onClick={handleCompare}>
+            <GitCompareArrows className="mr-2 h-4 w-4" />Compare Now
+          </Button>
+        </div>
+      )}
+
       <div className="grid gap-6">
-        {results
-          .sort((a, b) => b.match_score - a.match_score)
-          .map((suburb, index) => {
-            const risk = riskConfig[suburb.risk_level as keyof typeof riskConfig] ?? riskConfig.medium;
-            const RiskIcon = risk.icon;
-            return (
-              <Card key={suburb.id} className="overflow-hidden">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                      <div className={cn(
-                        "flex items-center justify-center w-10 h-10 rounded-full font-bold text-lg",
-                        index === 0 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                      )}>
-                        {index + 1}
-                      </div>
-                      <div>
-                        <CardTitle className="text-xl">
-                          <MapPin className="inline h-4 w-4 mr-1 text-primary" />
-                          {suburb.suburb_name}, {suburb.state} {suburb.postcode ?? ""}
-                        </CardTitle>
-                        <div className="flex items-center gap-2 mt-1">
-                          {suburb.best_for_tag && (
-                            <Badge variant="secondary" className="text-xs">{suburb.best_for_tag}</Badge>
-                          )}
-                          <Badge className={cn("text-xs", risk.color)}>
-                            <RiskIcon className="h-3 w-3 mr-1" />{risk.label}
-                          </Badge>
-                        </div>
-                      </div>
+        {sortedResults.map((suburb, index) => {
+          const risk = riskConfig[suburb.risk_level as keyof typeof riskConfig] ?? riskConfig.medium;
+          const RiskIcon = risk.icon;
+          const isSelected = selected.has(suburb.id);
+
+          return (
+            <Card
+              key={suburb.id}
+              className={cn(
+                "overflow-hidden transition-all",
+                isSelected && "ring-2 ring-primary"
+              )}
+            >
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    {/* Selection checkbox */}
+                    <Checkbox
+                      checked={isSelected}
+                      onCheckedChange={() => toggleSelect(suburb.id)}
+                      className="mt-1"
+                      aria-label={`Select ${suburb.suburb_name} for comparison`}
+                    />
+                    <div className={cn(
+                      "flex items-center justify-center w-10 h-10 rounded-full font-bold text-lg shrink-0",
+                      index === 0 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                    )}>
+                      {index + 1}
                     </div>
-                    <div className="text-right">
-                      <div className="text-3xl font-bold text-primary">{suburb.match_score}%</div>
-                      <div className="text-xs text-muted-foreground">Match</div>
+                    <div>
+                      <CardTitle className="text-xl">
+                        <MapPin className="inline h-4 w-4 mr-1 text-primary" />
+                        {suburb.suburb_name}, {suburb.state} {suburb.postcode ?? ""}
+                      </CardTitle>
+                      <div className="flex items-center gap-2 mt-1">
+                        {suburb.best_for_tag && (
+                          <Badge variant="secondary" className="text-xs">{suburb.best_for_tag}</Badge>
+                        )}
+                        <Badge className={cn("text-xs", risk.color)}>
+                          <RiskIcon className="h-3 w-3 mr-1" />{risk.label}
+                        </Badge>
+                      </div>
                     </div>
                   </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* Metrics grid */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {suburb.median_price != null && (
-                      <MetricCard icon={Home} label="Median Price" value={`$${(suburb.median_price / 1000).toFixed(0)}k`} />
+                  <div className="text-right">
+                    <div className="text-3xl font-bold text-primary">{suburb.match_score}%</div>
+                    <div className="text-xs text-muted-foreground">Match</div>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {suburb.median_price != null && (
+                    <MetricCard icon={Home} label="Median Price" value={`$${(suburb.median_price / 1000).toFixed(0)}k`} />
+                  )}
+                  {suburb.rental_yield != null && (
+                    <MetricCard icon={TrendingUp} label="Rental Yield" value={`${suburb.rental_yield}%`} />
+                  )}
+                  {suburb.vacancy_rate != null && (
+                    <MetricCard icon={AlertTriangle} label="Vacancy Rate" value={`${suburb.vacancy_rate}%`} />
+                  )}
+                  {suburb.days_on_market != null && (
+                    <MetricCard icon={Clock} label="Days on Market" value={`${suburb.days_on_market}`} />
+                  )}
+                </div>
+
+                {(suburb.rental_range_low != null || suburb.weekly_out_of_pocket != null) && (
+                  <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                    {suburb.rental_range_low != null && suburb.rental_range_high != null && (
+                      <span>Weekly rent: ${suburb.rental_range_low}–${suburb.rental_range_high}</span>
                     )}
-                    {suburb.rental_yield != null && (
-                      <MetricCard icon={TrendingUp} label="Rental Yield" value={`${suburb.rental_yield}%`} />
-                    )}
-                    {suburb.vacancy_rate != null && (
-                      <MetricCard icon={AlertTriangle} label="Vacancy Rate" value={`${suburb.vacancy_rate}%`} />
-                    )}
-                    {suburb.days_on_market != null && (
-                      <MetricCard icon={Clock} label="Days on Market" value={`${suburb.days_on_market}`} />
+                    {suburb.weekly_out_of_pocket != null && (
+                      <span>Est. out-of-pocket: ${suburb.weekly_out_of_pocket}/wk</span>
                     )}
                   </div>
+                )}
 
-                  {/* Rent & out-of-pocket */}
-                  {(suburb.rental_range_low != null || suburb.weekly_out_of_pocket != null) && (
-                    <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                      {suburb.rental_range_low != null && suburb.rental_range_high != null && (
-                        <span>Weekly rent: ${suburb.rental_range_low}–${suburb.rental_range_high}</span>
-                      )}
-                      {suburb.weekly_out_of_pocket != null && (
-                        <span>Est. out-of-pocket: ${suburb.weekly_out_of_pocket}/wk</span>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Reasoning */}
-                  {suburb.reasoning && (
-                    <p className="text-sm text-muted-foreground border-t pt-3">{suburb.reasoning}</p>
-                  )}
-                </CardContent>
-              </Card>
-            );
-          })}
+                {suburb.reasoning && (
+                  <p className="text-sm text-muted-foreground border-t pt-3">{suburb.reasoning}</p>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       <div className="flex justify-center gap-3 mt-10">
