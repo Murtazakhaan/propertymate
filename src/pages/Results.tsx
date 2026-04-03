@@ -302,8 +302,8 @@ const Results = () => {
                   {suburb.population_growth != null && (
                     <MetricCard icon={TrendingUp} label={labels.populationGrowth} value={`${suburb.population_growth}%`} />
                   )}
-                  {/* Owner occupier: stamp duty */}
-                  {isOwnerOccupier && suburb.stamp_duty_estimate != null && (
+                  {/* Stamp duty for both paths */}
+                  {suburb.stamp_duty_estimate != null && (
                     <MetricCard icon={Building2} label={labels.stampDuty} value={`$${(suburb.stamp_duty_estimate / 1000).toFixed(0)}k`} />
                   )}
                   {/* Investor-only metrics */}
