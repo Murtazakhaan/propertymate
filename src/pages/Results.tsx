@@ -248,10 +248,10 @@ const Results = () => {
 
                 {(suburb.rental_range_low != null || suburb.weekly_out_of_pocket != null) && (
                   <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                    {suburb.rental_range_low != null && suburb.rental_range_high != null && (
+                {answers.goal !== "first-home" && suburb.rental_range_low != null && suburb.rental_range_high != null && (
                       <span>{labels.weeklyRent}: ${suburb.rental_range_low}–${suburb.rental_range_high}</span>
                     )}
-                    {suburb.weekly_out_of_pocket != null && (
+                    {answers.goal !== "first-home" && suburb.weekly_out_of_pocket != null && (
                       <span>{labels.estOutOfPocket}: ${suburb.weekly_out_of_pocket}/wk</span>
                     )}
                   </div>
