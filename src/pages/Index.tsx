@@ -37,7 +37,7 @@ const Index = () => {
           <div className="max-w-3xl mx-auto text-center space-y-6">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium animate-fade-in">
               <Sparkles className="h-4 w-4" />
-              AI-Powered Property Insights
+              Smart Property Insights for Australia
             </div>
             <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-foreground animate-fade-in" style={{ animationDelay: "0.1s" }}>
               Find your next investment suburb{" "}
