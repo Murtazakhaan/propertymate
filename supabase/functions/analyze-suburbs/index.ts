@@ -143,8 +143,9 @@ function getToolSchema(goal: string) {
     });
     baseRequired.push("stamp_duty_estimate", "nearest_hospital", "num_schools", "has_train_station", "crime_rate_level", "nearest_shopping_centre");
   } else if (goal === "investment") {
-    // Investor: rental metrics + infrastructure
+    // Investor: rental metrics + infrastructure + stamp duty + house/unit rent
     Object.assign(baseProperties, {
+      stamp_duty_estimate: { type: "integer", description: "Estimated stamp duty in AUD" },
       rental_yield: { type: "number", description: "Gross rental yield percentage" },
       vacancy_rate: { type: "number", description: "Vacancy rate percentage" },
       days_on_market: { type: "integer", description: "Average days on market" },
@@ -152,8 +153,10 @@ function getToolSchema(goal: string) {
       rental_range_high: { type: "integer", description: "Weekly rent high end in AUD" },
       weekly_out_of_pocket: { type: "integer", description: "Estimated weekly out-of-pocket cost after rent" },
       infrastructure_projects: { type: "string", description: "Upcoming infrastructure projects in the area" },
+      house_weekly_rent: { type: "integer", description: "Typical weekly rent for a house in AUD" },
+      unit_weekly_rent: { type: "integer", description: "Typical weekly rent for a unit in AUD" },
     });
-    baseRequired.push("rental_yield", "vacancy_rate", "infrastructure_projects");
+    baseRequired.push("stamp_duty_estimate", "rental_yield", "vacancy_rate", "infrastructure_projects", "house_weekly_rent", "unit_weekly_rent");
   } else {
     // Not sure: include a mix
     Object.assign(baseProperties, {
