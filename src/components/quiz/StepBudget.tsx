@@ -1,4 +1,5 @@
 import { useQuiz } from "@/contexts/QuizContext";
+import { useApp } from "@/contexts/AppContext";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
@@ -13,6 +14,7 @@ const formatCurrency = (value: number) => {
 
 const StepBudget = () => {
   const { answers, updateAnswers, setCurrentStep } = useQuiz();
+  const { beginnerMode } = useApp();
 
   const canProceed = answers.budgetUnknown
     ? (answers.income && answers.income > 0)
@@ -21,9 +23,13 @@ const StepBudget = () => {
   return (
     <div className="space-y-8">
       <div className="text-center space-y-2">
-        <h2 className="text-2xl md:text-3xl font-bold text-foreground">What's your budget?</h2>
+        <h2 className="text-2xl md:text-3xl font-bold text-foreground">
+          {beginnerMode ? "How much can you spend?" : "What's your budget?"}
+        </h2>
         <p className="text-muted-foreground">
-          Don't worry if you're not sure — we can estimate based on your income.
+          {beginnerMode
+            ? "If you're not sure, just toggle the switch below and we'll work it out from your income."
+            : "Don't worry if you're not sure — we can estimate based on your income."}
         </p>
       </div>
 
@@ -37,7 +43,9 @@ const StepBudget = () => {
             }
           />
           <Label htmlFor="budget-unknown" className="text-sm text-muted-foreground cursor-pointer">
-            I don't know my budget — help me estimate
+            {beginnerMode
+              ? "I'm not sure — help me figure it out"
+              : "I don't know my budget — help me estimate"}
           </Label>
         </div>
 
@@ -47,6 +55,11 @@ const StepBudget = () => {
               <span className="text-3xl font-bold text-primary">
                 {answers.budget ? formatCurrency(answers.budget) : "$—"}
               </span>
+              {beginnerMode && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Drag the slider to set how much you'd pay for a property
+                </p>
+              )}
             </div>
             <Slider
               value={[answers.budget || 400000]}
@@ -64,7 +77,9 @@ const StepBudget = () => {
         ) : (
           <div className="space-y-4 p-5 rounded-lg bg-muted/50 border">
             <div>
-              <Label className="text-sm font-medium">Annual household income</Label>
+              <Label className="text-sm font-medium">
+                {beginnerMode ? "How much do you earn per year (before tax)?" : "Annual household income"}
+              </Label>
               <Input
                 type="number"
                 placeholder="e.g. 85000"
@@ -74,7 +89,9 @@ const StepBudget = () => {
               />
             </div>
             <div>
-              <Label className="text-sm font-medium">Savings / deposit available</Label>
+              <Label className="text-sm font-medium">
+                {beginnerMode ? "How much money do you have saved?" : "Savings / deposit available"}
+              </Label>
               <Input
                 type="number"
                 placeholder="e.g. 50000"
@@ -90,7 +107,7 @@ const StepBudget = () => {
                 onCheckedChange={(checked) => updateAnswers({ hasExistingHome: checked })}
               />
               <Label htmlFor="existing-home" className="text-sm cursor-pointer">
-                I already own a property
+                {beginnerMode ? "I already own a home" : "I already own a property"}
               </Label>
             </div>
           </div>

@@ -1,31 +1,66 @@
 import { useNavigate } from "react-router-dom";
 import { useQuiz } from "@/contexts/QuizContext";
+import { useApp } from "@/contexts/AppContext";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ArrowLeft, Sparkles, Clock, Zap, CalendarDays, CalendarRange } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const timelines = [
-  { value: "0-3" as const, label: "0–3 months", description: "Ready to act now", icon: Zap },
-  { value: "3-6" as const, label: "3–6 months", description: "Actively researching", icon: Clock },
-  { value: "6-12" as const, label: "6–12 months", description: "Planning ahead", icon: CalendarDays },
-  { value: "12+" as const, label: "12+ months", description: "Long-term exploration", icon: CalendarRange },
+  {
+    value: "0-3" as const,
+    label: "0–3 months",
+    beginnerLabel: "Very soon",
+    description: "Ready to act now",
+    beginnerDescription: "You're ready to start buying in the next few months",
+    icon: Zap,
+  },
+  {
+    value: "3-6" as const,
+    label: "3–6 months",
+    beginnerLabel: "In a few months",
+    description: "Actively researching",
+    beginnerDescription: "You're doing your homework and want to be ready soon",
+    icon: Clock,
+  },
+  {
+    value: "6-12" as const,
+    label: "6–12 months",
+    beginnerLabel: "Within a year",
+    description: "Planning ahead",
+    beginnerDescription: "You're thinking ahead and want to plan carefully",
+    icon: CalendarDays,
+  },
+  {
+    value: "12+" as const,
+    label: "12+ months",
+    beginnerLabel: "No rush",
+    description: "Long-term exploration",
+    beginnerDescription: "You're in no hurry — just want to learn for now",
+    icon: CalendarRange,
+  },
 ];
 
 const StepTimeline = () => {
   const { answers, updateAnswers, setCurrentStep } = useQuiz();
+  const { beginnerMode } = useApp();
   const navigate = useNavigate();
 
   const handleSubmit = () => {
-    // TODO: Submit to Supabase + call edge function
     navigate("/results");
   };
 
   return (
     <div className="space-y-8">
       <div className="text-center space-y-2">
-        <h2 className="text-2xl md:text-3xl font-bold text-foreground">When are you looking to buy?</h2>
-        <p className="text-muted-foreground">This helps us prioritise suburbs with the right market timing.</p>
+        <h2 className="text-2xl md:text-3xl font-bold text-foreground">
+          {beginnerMode ? "How soon do you want to buy?" : "When are you looking to buy?"}
+        </h2>
+        <p className="text-muted-foreground">
+          {beginnerMode
+            ? "There's no wrong answer — this just helps us pick suburbs with the right timing."
+            : "This helps us prioritise suburbs with the right market timing."}
+        </p>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -44,8 +79,12 @@ const StepTimeline = () => {
               "h-7 w-7 mx-auto mb-2",
               answers.timeline === t.value ? "text-primary" : "text-muted-foreground"
             )} />
-            <p className="font-semibold text-foreground">{t.label}</p>
-            <p className="text-xs text-muted-foreground mt-1">{t.description}</p>
+            <p className="font-semibold text-foreground">
+              {beginnerMode ? t.beginnerLabel : t.label}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              {beginnerMode ? t.beginnerDescription : t.description}
+            </p>
           </Card>
         ))}
       </div>
@@ -62,7 +101,7 @@ const StepTimeline = () => {
           className="font-semibold"
         >
           <Sparkles className="mr-2 h-4 w-4" />
-          Find My Suburbs
+          {beginnerMode ? "Show Me Suburbs" : "Find My Suburbs"}
         </Button>
       </div>
     </div>
