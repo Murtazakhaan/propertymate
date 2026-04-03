@@ -222,6 +222,7 @@ export type Database = {
           crime_rate_level: string | null
           days_on_market: number | null
           has_train_station: boolean | null
+          house_weekly_rent: number | null
           id: string
           infrastructure_projects: string | null
           match_score: number
@@ -240,6 +241,7 @@ export type Database = {
           stamp_duty_estimate: number | null
           state: string
           suburb_name: string
+          unit_weekly_rent: number | null
           vacancy_rate: number | null
           weekly_out_of_pocket: number | null
         }
@@ -251,6 +253,7 @@ export type Database = {
           crime_rate_level?: string | null
           days_on_market?: number | null
           has_train_station?: boolean | null
+          house_weekly_rent?: number | null
           id?: string
           infrastructure_projects?: string | null
           match_score?: number
@@ -269,6 +272,7 @@ export type Database = {
           stamp_duty_estimate?: number | null
           state: string
           suburb_name: string
+          unit_weekly_rent?: number | null
           vacancy_rate?: number | null
           weekly_out_of_pocket?: number | null
         }
@@ -280,6 +284,7 @@ export type Database = {
           crime_rate_level?: string | null
           days_on_market?: number | null
           has_train_station?: boolean | null
+          house_weekly_rent?: number | null
           id?: string
           infrastructure_projects?: string | null
           match_score?: number
@@ -298,6 +303,7 @@ export type Database = {
           stamp_duty_estimate?: number | null
           state?: string
           suburb_name?: string
+          unit_weekly_rent?: number | null
           vacancy_rate?: number | null
           weekly_out_of_pocket?: number | null
         }

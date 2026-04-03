@@ -42,6 +42,8 @@ interface SuburbResult {
   crime_rate_level: string | null;
   nearest_shopping_centre: string | null;
   infrastructure_projects: string | null;
+  house_weekly_rent: number | null;
+  unit_weekly_rent: number | null;
 }
 
 interface PropertyListing {
@@ -55,6 +57,15 @@ interface PropertyListing {
   link: string | null;
   image_url: string | null;
 }
+
+const buildRealEstateUrl = (suburb: SuburbResult, budget: number | null) => {
+  const suburbSlug = suburb.suburb_name.toLowerCase().replace(/\s+/g, "-");
+  const stateMap: Record<string, string> = { NSW: "nsw", VIC: "vic", QLD: "qld", WA: "wa", SA: "sa", TAS: "tas", ACT: "act", NT: "nt" };
+  const stateSlug = stateMap[suburb.state] || suburb.state.toLowerCase();
+  let url = `https://www.realestate.com.au/buy/in-${suburbSlug},+${stateSlug}+${suburb.postcode ?? ""}/list-1`;
+  if (budget) url += `?maxPrice=${budget}`;
+  return url;
+};
 
 const Results = () => {
   const { answers } = useQuiz();
@@ -291,8 +302,8 @@ const Results = () => {
                   {suburb.population_growth != null && (
                     <MetricCard icon={TrendingUp} label={labels.populationGrowth} value={`${suburb.population_growth}%`} />
                   )}
-                  {/* Owner occupier: stamp duty */}
-                  {isOwnerOccupier && suburb.stamp_duty_estimate != null && (
+                  {/* Stamp duty for both paths */}
+                  {suburb.stamp_duty_estimate != null && (
                     <MetricCard icon={Building2} label={labels.stampDuty} value={`$${(suburb.stamp_duty_estimate / 1000).toFixed(0)}k`} />
                   )}
                   {/* Investor-only metrics */}
@@ -336,6 +347,18 @@ const Results = () => {
                   </div>
                 )}
 
+                {/* Investor: house vs unit rental breakdown */}
+                {isInvestor && (suburb.house_weekly_rent != null || suburb.unit_weekly_rent != null) && (
+                  <div className="grid grid-cols-2 gap-3">
+                    {suburb.house_weekly_rent != null && (
+                      <MetricCard icon={Home} label={labels.houseRentalReturn} value={`$${suburb.house_weekly_rent}/wk`} />
+                    )}
+                    {suburb.unit_weekly_rent != null && (
+                      <MetricCard icon={Building2} label={labels.unitRentalReturn} value={`$${suburb.unit_weekly_rent}/wk`} />
+                    )}
+                  </div>
+                )}
+
                 {/* Investor rental info */}
                 {isInvestor && (suburb.rental_range_low != null || suburb.weekly_out_of_pocket != null) && (
                   <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
@@ -374,11 +397,6 @@ const Results = () => {
                             </div>
                             <div className="text-right">
                               <p className="font-bold text-primary">${listing.price.toLocaleString()}</p>
-                              {listing.link && (
-                                <a href={listing.link} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1 justify-end">
-                                  View <ExternalLink className="h-3 w-3" />
-                                </a>
-                              )}
                             </div>
                           </div>
                         ))}
@@ -386,6 +404,19 @@ const Results = () => {
                     )}
                   </div>
                 )}
+
+                {/* Browse on realestate.com.au */}
+                <div className="border-t pt-3">
+                  <a
+                    href={buildRealEstateUrl(suburb, answers.budget)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    {labels.browseListings}
+                  </a>
+                </div>
               </CardContent>
             </Card>
           );
