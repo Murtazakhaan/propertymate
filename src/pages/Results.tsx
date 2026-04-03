@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ArrowLeft, Loader2, MapPin, TrendingUp, Home, Clock, AlertTriangle, Shield, Zap, RotateCcw, GitCompareArrows, ChevronDown } from "lucide-react";
 import { ArrowLeft, Loader2, MapPin, TrendingUp, Home, Clock, AlertTriangle, Shield, Zap, RotateCcw, GitCompareArrows } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuiz } from "@/contexts/QuizContext";
