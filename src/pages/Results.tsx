@@ -235,13 +235,13 @@ const Results = () => {
                   {suburb.median_price != null && (
                     <MetricCard icon={Home} label={labels.medianPrice} value={`$${(suburb.median_price / 1000).toFixed(0)}k`} />
                   )}
-                  {suburb.rental_yield != null && (
+                  {answers.goal !== "first-home" && suburb.rental_yield != null && (
                     <MetricCard icon={TrendingUp} label={labels.rentalYield} value={`${suburb.rental_yield}%`} />
                   )}
                   {suburb.vacancy_rate != null && (
                     <MetricCard icon={AlertTriangle} label={labels.vacancyRate} value={`${suburb.vacancy_rate}%`} />
                   )}
-                  {suburb.days_on_market != null && (
+                  {answers.goal !== "first-home" && suburb.days_on_market != null && (
                     <MetricCard icon={Clock} label={labels.daysOnMarket} value={`${suburb.days_on_market}`} />
                   )}
                 </div>
