@@ -44,8 +44,7 @@ const Index = () => {
               <span className="text-primary">in minutes</span>
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto animate-fade-in" style={{ animationDelay: "0.2s" }}>
-              Answer a few simple questions and let our AI match you with high-potential Australian suburbs — 
-              tailored to your budget, goals, and comfort level.
+              Answer a few questions about your budget, goals, and comfort level. We'll match you with high-potential Australian suburbs in minutes.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in" style={{ animationDelay: "0.3s" }}>
               <Link to="/quiz">
