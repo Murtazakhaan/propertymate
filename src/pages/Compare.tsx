@@ -76,7 +76,9 @@ const Compare = () => {
   const navigate = useNavigate();
   const { beginnerMode } = useApp();
   const suburbs: SuburbResult[] = location.state?.suburbs ?? [];
+  const goal: string | null = location.state?.goal ?? null;
   const labels = metricLabels(beginnerMode);
+  const isOwnerOccupier = goal === "first-home";
 
   const riskConfig = {
     low: { color: "bg-green-100 text-green-800", icon: Shield, label: labels.riskLow },
@@ -158,13 +160,15 @@ const Compare = () => {
               highlight="lowest"
               rawValues={suburbs.map((s) => s.median_price)}
             />
-            <MetricRow
-              label={labels.rentalYield}
-              icon={TrendingUp}
-              values={suburbs.map((s) => formatPct(s.rental_yield))}
-              highlight="highest"
-              rawValues={suburbs.map((s) => s.rental_yield)}
-            />
+            {!isOwnerOccupier && (
+              <MetricRow
+                label={labels.rentalYield}
+                icon={TrendingUp}
+                values={suburbs.map((s) => formatPct(s.rental_yield))}
+                highlight="highest"
+                rawValues={suburbs.map((s) => s.rental_yield)}
+              />
+            )}
             <MetricRow
               label={labels.vacancyRate}
               icon={AlertTriangle}
@@ -179,30 +183,36 @@ const Compare = () => {
               highlight="highest"
               rawValues={suburbs.map((s) => s.population_growth)}
             />
-            <MetricRow
-              label={labels.daysOnMarket}
-              icon={Clock}
-              values={suburbs.map((s) => formatNum(s.days_on_market))}
-              highlight="lowest"
-              rawValues={suburbs.map((s) => s.days_on_market)}
-            />
-            <MetricRow
-              label={labels.weeklyRentLow}
-              icon={Home}
-              values={suburbs.map((s) => formatDollar(s.rental_range_low))}
-            />
-            <MetricRow
-              label={labels.weeklyRentHigh}
-              icon={Home}
-              values={suburbs.map((s) => formatDollar(s.rental_range_high))}
-            />
-            <MetricRow
-              label={labels.outOfPocket}
-              icon={TrendingUp}
-              values={suburbs.map((s) => formatDollar(s.weekly_out_of_pocket))}
-              highlight="lowest"
-              rawValues={suburbs.map((s) => s.weekly_out_of_pocket)}
-            />
+            {!isOwnerOccupier && (
+              <MetricRow
+                label={labels.daysOnMarket}
+                icon={Clock}
+                values={suburbs.map((s) => formatNum(s.days_on_market))}
+                highlight="lowest"
+                rawValues={suburbs.map((s) => s.days_on_market)}
+              />
+            )}
+            {!isOwnerOccupier && (
+              <>
+                <MetricRow
+                  label={labels.weeklyRentLow}
+                  icon={Home}
+                  values={suburbs.map((s) => formatDollar(s.rental_range_low))}
+                />
+                <MetricRow
+                  label={labels.weeklyRentHigh}
+                  icon={Home}
+                  values={suburbs.map((s) => formatDollar(s.rental_range_high))}
+                />
+                <MetricRow
+                  label={labels.outOfPocket}
+                  icon={TrendingUp}
+                  values={suburbs.map((s) => formatDollar(s.weekly_out_of_pocket))}
+                  highlight="lowest"
+                  rawValues={suburbs.map((s) => s.weekly_out_of_pocket)}
+                />
+              </>
+            )}
 
             {/* Reasoning */}
             <tr>

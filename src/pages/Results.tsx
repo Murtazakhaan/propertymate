@@ -112,7 +112,7 @@ const Results = () => {
 
   const handleCompare = () => {
     const suburbs = results.filter((r) => selected.has(r.id));
-    navigate("/compare", { state: { suburbs } });
+    navigate("/compare", { state: { suburbs, goal: answers.goal } });
   };
 
   if (loading) {
@@ -138,10 +138,10 @@ const Results = () => {
   if (error === "no-quiz") {
     return (
       <div className="container max-w-4xl py-10 md:py-16 text-center space-y-6">
-        <h1 className="text-2xl font-bold text-foreground">No quiz data found</h1>
-        <p className="text-muted-foreground">Please complete the quiz first so we can analyse suburbs for you.</p>
+        <h1 className="text-2xl font-bold text-foreground">No search data found</h1>
+        <p className="text-muted-foreground">Tell us what you're looking for so we can find the right suburbs for you.</p>
         <Link to="/quiz">
-          <Button size="lg"><ArrowLeft className="mr-2 h-4 w-4" />Take the Quiz</Button>
+          <Button size="lg"><ArrowLeft className="mr-2 h-4 w-4" />Find My Property</Button>
         </Link>
       </div>
     );
@@ -154,7 +154,7 @@ const Results = () => {
         <p className="text-muted-foreground">{error}</p>
         <div className="flex gap-3 justify-center">
           <Button onClick={fetchResults} variant="outline"><RotateCcw className="mr-2 h-4 w-4" />Try Again</Button>
-          <Link to="/quiz"><Button><ArrowLeft className="mr-2 h-4 w-4" />Retake Quiz</Button></Link>
+          <Link to="/quiz"><Button><ArrowLeft className="mr-2 h-4 w-4" />Start Over</Button></Link>
         </div>
       </div>
     );
@@ -235,23 +235,23 @@ const Results = () => {
                   {suburb.median_price != null && (
                     <MetricCard icon={Home} label={labels.medianPrice} value={`$${(suburb.median_price / 1000).toFixed(0)}k`} />
                   )}
-                  {suburb.rental_yield != null && (
+                  {answers.goal !== "first-home" && suburb.rental_yield != null && (
                     <MetricCard icon={TrendingUp} label={labels.rentalYield} value={`${suburb.rental_yield}%`} />
                   )}
                   {suburb.vacancy_rate != null && (
                     <MetricCard icon={AlertTriangle} label={labels.vacancyRate} value={`${suburb.vacancy_rate}%`} />
                   )}
-                  {suburb.days_on_market != null && (
+                  {answers.goal !== "first-home" && suburb.days_on_market != null && (
                     <MetricCard icon={Clock} label={labels.daysOnMarket} value={`${suburb.days_on_market}`} />
                   )}
                 </div>
 
                 {(suburb.rental_range_low != null || suburb.weekly_out_of_pocket != null) && (
                   <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                    {suburb.rental_range_low != null && suburb.rental_range_high != null && (
+                {answers.goal !== "first-home" && suburb.rental_range_low != null && suburb.rental_range_high != null && (
                       <span>{labels.weeklyRent}: ${suburb.rental_range_low}–${suburb.rental_range_high}</span>
                     )}
-                    {suburb.weekly_out_of_pocket != null && (
+                    {answers.goal !== "first-home" && suburb.weekly_out_of_pocket != null && (
                       <span>{labels.estOutOfPocket}: ${suburb.weekly_out_of_pocket}/wk</span>
                     )}
                   </div>
@@ -269,7 +269,7 @@ const Results = () => {
       <div className="flex justify-center gap-3 mt-10">
         <Link to="/quiz">
           <Button variant="outline" size="lg">
-            <RotateCcw className="mr-2 h-4 w-4" />Retake Quiz
+            <RotateCcw className="mr-2 h-4 w-4" />Start Over
           </Button>
         </Link>
       </div>
