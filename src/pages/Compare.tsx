@@ -1,7 +1,11 @@
 import { useLocation, Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, MapPin, Shield, AlertTriangle, Zap, TrendingUp, Home, Clock, Users, BarChart3 } from "lucide-react";
+import {
+  ArrowLeft, MapPin, Shield, AlertTriangle, Zap, TrendingUp, Home,
+  Clock, Users, BarChart3, Hospital, GraduationCap, Train, ShieldCheck,
+  ShoppingBag, Wrench, Building2,
+} from "lucide-react";
 import { useApp } from "@/contexts/AppContext";
 import { cn } from "@/lib/utils";
 import { metricLabels } from "@/lib/metric-labels";
@@ -24,12 +28,21 @@ interface SuburbResult {
   best_for_tag: string | null;
   confidence: string | null;
   reasoning: string | null;
+  stamp_duty_estimate: number | null;
+  capital_growth_rate: number | null;
+  nearest_hospital: string | null;
+  num_schools: number | null;
+  has_train_station: boolean | null;
+  crime_rate_level: string | null;
+  nearest_shopping_centre: string | null;
+  infrastructure_projects: string | null;
 }
 
 const formatPrice = (v: number | null) => (v != null ? `$${(v / 1000).toFixed(0)}k` : "-");
 const formatPct = (v: number | null) => (v != null ? `${v}%` : "-");
 const formatNum = (v: number | null) => (v != null ? `${v}` : "-");
 const formatDollar = (v: number | null) => (v != null ? `$${v}` : "-");
+const formatBool = (v: boolean | null) => (v === true ? "Yes" : v === false ? "No" : "-");
 
 interface MetricRowProps {
   label: string;
@@ -79,6 +92,7 @@ const Compare = () => {
   const goal: string | null = location.state?.goal ?? null;
   const labels = metricLabels(beginnerMode);
   const isOwnerOccupier = goal === "first-home";
+  const isInvestor = goal === "investment";
 
   const riskConfig = {
     low: { color: "bg-green-100 text-green-800", icon: Shield, label: labels.riskLow },
@@ -131,7 +145,9 @@ const Compare = () => {
                         {s.best_for_tag && (
                           <Badge variant="secondary" className="text-xs">{s.best_for_tag}</Badge>
                         )}
-                        <Badge className={cn("text-xs", risk.color)}>{risk.label}</Badge>
+                        {!isOwnerOccupier && (
+                          <Badge className={cn("text-xs", risk.color)}>{risk.label}</Badge>
+                        )}
                       </div>
                     </div>
                   </th>
@@ -153,6 +169,7 @@ const Compare = () => {
               ))}
             </tr>
 
+            {/* Common metrics */}
             <MetricRow
               label={labels.medianPrice}
               icon={Home}
@@ -160,21 +177,12 @@ const Compare = () => {
               highlight="lowest"
               rawValues={suburbs.map((s) => s.median_price)}
             />
-            {!isOwnerOccupier && (
-              <MetricRow
-                label={labels.rentalYield}
-                icon={TrendingUp}
-                values={suburbs.map((s) => formatPct(s.rental_yield))}
-                highlight="highest"
-                rawValues={suburbs.map((s) => s.rental_yield)}
-              />
-            )}
             <MetricRow
-              label={labels.vacancyRate}
-              icon={AlertTriangle}
-              values={suburbs.map((s) => formatPct(s.vacancy_rate))}
-              highlight="lowest"
-              rawValues={suburbs.map((s) => s.vacancy_rate)}
+              label={labels.capitalGrowth}
+              icon={TrendingUp}
+              values={suburbs.map((s) => formatPct(s.capital_growth_rate))}
+              highlight="highest"
+              rawValues={suburbs.map((s) => s.capital_growth_rate)}
             />
             <MetricRow
               label={labels.populationGrowth}
@@ -183,17 +191,71 @@ const Compare = () => {
               highlight="highest"
               rawValues={suburbs.map((s) => s.population_growth)}
             />
-            {!isOwnerOccupier && (
-              <MetricRow
-                label={labels.daysOnMarket}
-                icon={Clock}
-                values={suburbs.map((s) => formatNum(s.days_on_market))}
-                highlight="lowest"
-                rawValues={suburbs.map((s) => s.days_on_market)}
-              />
-            )}
-            {!isOwnerOccupier && (
+
+            {/* Owner occupier metrics */}
+            {isOwnerOccupier && (
               <>
+                <MetricRow
+                  label={labels.stampDuty}
+                  icon={Building2}
+                  values={suburbs.map((s) => formatPrice(s.stamp_duty_estimate))}
+                  highlight="lowest"
+                  rawValues={suburbs.map((s) => s.stamp_duty_estimate)}
+                />
+                <MetricRow
+                  label={labels.nearestHospital}
+                  icon={Hospital}
+                  values={suburbs.map((s) => s.nearest_hospital ?? "-")}
+                />
+                <MetricRow
+                  label={labels.numSchools}
+                  icon={GraduationCap}
+                  values={suburbs.map((s) => formatNum(s.num_schools))}
+                  highlight="highest"
+                  rawValues={suburbs.map((s) => s.num_schools)}
+                />
+                <MetricRow
+                  label={labels.trainStation}
+                  icon={Train}
+                  values={suburbs.map((s) => formatBool(s.has_train_station))}
+                />
+                <MetricRow
+                  label={labels.crimeRate}
+                  icon={ShieldCheck}
+                  values={suburbs.map((s) => s.crime_rate_level ? s.crime_rate_level.charAt(0).toUpperCase() + s.crime_rate_level.slice(1) : "-")}
+                />
+                <MetricRow
+                  label={labels.shoppingCentre}
+                  icon={ShoppingBag}
+                  values={suburbs.map((s) => s.nearest_shopping_centre ?? "-")}
+                />
+              </>
+            )}
+
+            {/* Investor metrics */}
+            {isInvestor && (
+              <>
+                <MetricRow
+                  label={labels.rentalYield}
+                  icon={TrendingUp}
+                  values={suburbs.map((s) => formatPct(s.rental_yield))}
+                  highlight="highest"
+                  rawValues={suburbs.map((s) => s.rental_yield)}
+                />
+                <MetricRow
+                  label={labels.vacancyRate}
+                  icon={AlertTriangle}
+                  values={suburbs.map((s) => formatPct(s.vacancy_rate))}
+                  highlight="lowest"
+                  rawValues={suburbs.map((s) => s.vacancy_rate)}
+                />
+                <MetricRow
+                  label={labels.daysOnMarket}
+                  icon={Clock}
+                  values={suburbs.map((s) => formatNum(s.days_on_market))}
+                  highlight="lowest"
+                  rawValues={suburbs.map((s) => s.days_on_market)}
+                />
                 <MetricRow
                   label={labels.weeklyRentLow}
                   icon={Home}
@@ -212,6 +274,21 @@ const Compare = () => {
                   rawValues={suburbs.map((s) => s.weekly_out_of_pocket)}
                 />
               </>
+            )}
+
+            {/* Infrastructure (investor) */}
+            {isInvestor && (
+              <tr className="border-b border-border/50">
+                <td className="py-3 px-4 text-sm font-medium text-muted-foreground flex items-center gap-2">
+                  <Wrench className="h-4 w-4" />
+                  {labels.infrastructureProjects}
+                </td>
+                {suburbs.map((s) => (
+                  <td key={s.id} className="py-3 px-4 text-sm text-muted-foreground align-top">
+                    {s.infrastructure_projects ?? "-"}
+                  </td>
+                ))}
+              </tr>
             )}
 
             {/* Reasoning */}
