@@ -6,14 +6,14 @@ const About = () => (
     <div className="text-center space-y-3">
       <h1 className="text-3xl font-bold text-foreground">How Investore Works</h1>
       <p className="text-muted-foreground max-w-xl mx-auto">
-        Investore uses AI to match your goals and preferences with Australian suburb data, giving you a personalised shortlist in minutes.
+        Investore matches your goals and preferences with Australian suburb data, giving you a personalised shortlist in minutes.
       </p>
     </div>
 
     <div className="grid gap-6">
       {[
-        { icon: Brain, title: "AI Analysis", text: "We feed your quiz answers into an AI model that evaluates suburbs based on growth potential, rental yield, risk level, and affordability." },
-        { icon: Database, title: "Real Data", text: "Our recommendations draw on publicly available property data including median prices, vacancy rates, population growth, and infrastructure plans." },
+        { icon: Brain, title: "Smart Analysis", text: "Your quiz answers are evaluated against suburb data covering growth potential, rental yield, risk level, and affordability." },
+        { icon: Database, title: "Real Data", text: "Recommendations draw on publicly available property data including median prices, vacancy rates, population growth, and infrastructure plans." },
         { icon: Shield, title: "Not Financial Advice", text: "Investore provides general guidance only. We are not licensed financial advisors. Always consult a qualified professional before making purchasing decisions." },
       ].map((item) => (
         <Card key={item.title}>

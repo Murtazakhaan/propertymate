@@ -26,10 +26,10 @@ interface SuburbResult {
   reasoning: string | null;
 }
 
-const formatPrice = (v: number | null) => (v != null ? `$${(v / 1000).toFixed(0)}k` : "—");
-const formatPct = (v: number | null) => (v != null ? `${v}%` : "—");
-const formatNum = (v: number | null) => (v != null ? `${v}` : "—");
-const formatDollar = (v: number | null) => (v != null ? `$${v}` : "—");
+const formatPrice = (v: number | null) => (v != null ? `$${(v / 1000).toFixed(0)}k` : "-");
+const formatPct = (v: number | null) => (v != null ? `${v}%` : "-");
+const formatNum = (v: number | null) => (v != null ? `${v}` : "-");
+const formatDollar = (v: number | null) => (v != null ? `$${v}` : "-");
 
 interface MetricRowProps {
   label: string;
@@ -64,7 +64,7 @@ const MetricRow = ({ label, icon: Icon, values, highlight, rawValues }: MetricRo
             i === bestIdx ? "text-primary font-bold" : "text-foreground"
           )}
         >
-          {val ?? "—"}
+          {val ?? "-"}
         </td>
       ))}
     </tr>
@@ -211,7 +211,7 @@ const Compare = () => {
               </td>
               {suburbs.map((s) => (
                 <td key={s.id} className="py-4 px-4 text-sm text-muted-foreground align-top">
-                  {s.reasoning ?? "—"}
+                  {s.reasoning ?? "-"}
                 </td>
               ))}
             </tr>

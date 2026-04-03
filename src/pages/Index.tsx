@@ -6,8 +6,8 @@ import { Brain, BookOpen, TrendingUp, ArrowRight, Shield, Sparkles } from "lucid
 const valueProps = [
   {
     icon: Brain,
-    title: "AI-Powered Analysis",
-    description: "Our AI evaluates hundreds of suburbs against your goals, budget, and risk appetite to surface the best matches.",
+    title: "Smart Suburb Matching",
+    description: "We evaluate hundreds of suburbs against your goals, budget, and risk appetite to find the best fit.",
   },
   {
     icon: BookOpen,
@@ -16,15 +16,15 @@ const valueProps = [
   },
   {
     icon: TrendingUp,
-    title: "Data-Driven Results",
-    description: "Every recommendation is backed by real market data — median prices, rental yields, vacancy rates, and growth trends.",
+    title: "Real Market Data",
+    description: "Every recommendation is backed by actual market data including median prices, rental yields, vacancy rates, and growth trends.",
   },
 ];
 
 const steps = [
   { number: "1", title: "Tell us your goals", description: "First home or investment? What's your budget and timeline?" },
   { number: "2", title: "Set your preferences", description: "Risk tolerance, location flexibility, property age — we tailor results to you." },
-  { number: "3", title: "Get matched suburbs", description: "Our AI ranks suburbs with match scores, risk flags, and financial breakdowns." },
+  { number: "3", title: "Get matched suburbs", description: "Suburbs are ranked with match scores, risk flags, and financial breakdowns." },
 ];
 
 const Index = () => {
@@ -37,15 +37,14 @@ const Index = () => {
           <div className="max-w-3xl mx-auto text-center space-y-6">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium animate-fade-in">
               <Sparkles className="h-4 w-4" />
-              AI-Powered Property Insights
+              Smart Property Insights for Australia
             </div>
             <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-foreground animate-fade-in" style={{ animationDelay: "0.1s" }}>
               Find your next investment suburb{" "}
               <span className="text-primary">in minutes</span>
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto animate-fade-in" style={{ animationDelay: "0.2s" }}>
-              Answer a few simple questions and let our AI match you with high-potential Australian suburbs — 
-              tailored to your budget, goals, and comfort level.
+              Answer a few questions about your budget, goals, and comfort level. We'll match you with high-potential Australian suburbs in minutes.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in" style={{ animationDelay: "0.3s" }}>
               <Link to="/quiz">
@@ -119,7 +118,7 @@ const Index = () => {
           <div className="text-center mt-12">
             <Link to="/quiz">
               <Button size="lg" className="font-semibold">
-                Get Started — It's Free
+                Get Started, It's Free
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
@@ -132,7 +131,7 @@ const Index = () => {
         <div className="flex flex-col md:flex-row items-center justify-center gap-6 text-muted-foreground">
           <div className="flex items-center gap-2 text-sm">
             <Shield className="h-4 w-4" />
-            <span>No financial advice — general guidance only</span>
+            <span>General guidance only, not financial advice</span>
           </div>
           <div className="hidden md:block w-px h-4 bg-border" />
           <div className="flex items-center gap-2 text-sm">

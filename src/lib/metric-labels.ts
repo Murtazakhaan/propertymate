@@ -17,8 +17,8 @@ export const metricLabels = (beginner: boolean) => ({
   whyThisSuburb: beginner ? "Why we picked this" : "Why this suburb?",
   topMatches: beginner ? "Your Best Suburb Matches" : "Your Top Suburb Matches",
   topMatchesDesc: beginner
-    ? "We looked at your answers and found the suburbs that suit you best. Here's what we found."
-    : "Based on your profile, here are the suburbs that best fit your criteria.",
+    ? "These suburbs suit your answers best. Take a look."
+    : "Suburbs ranked by how well they fit your criteria.",
   compareTitle: beginner ? "Compare Your Suburbs" : "Compare Suburbs",
   compareDesc: beginner
     ? "See how your picked suburbs stack up against each other"

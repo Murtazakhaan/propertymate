@@ -27,7 +27,7 @@ const Login = () => (
           Sign In
         </Button>
         <p className="text-xs text-center text-muted-foreground">
-          Authentication will be enabled once Supabase is connected.
+          Sign in to save your shortlist and access it later.
         </p>
       </CardContent>
     </Card>

@@ -126,8 +126,8 @@ const Results = () => {
             </h1>
             <p className="text-muted-foreground mt-2">
               {beginnerMode
-                ? "We're searching through thousands of suburbs to find the best ones for you. Hang tight — about 10–20 seconds."
-                : "Our AI is crunching market data to find your best matches. This usually takes 10–20 seconds."}
+                ? "We're searching through thousands of suburbs to find the best ones for you. Hang tight, about 10 to 20 seconds."
+                : "Crunching market data to find your best matches. This usually takes 10 to 20 seconds."}
             </p>
           </div>
         </div>
