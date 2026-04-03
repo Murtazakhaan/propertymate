@@ -49,7 +49,7 @@ const Index = () => {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in" style={{ animationDelay: "0.3s" }}>
               <Link to="/quiz">
                 <Button size="lg" className="text-base px-8 py-6 font-semibold">
-                  Start the Quiz
+                  Let's Find My Property
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
