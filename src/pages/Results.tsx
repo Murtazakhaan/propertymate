@@ -112,7 +112,7 @@ const Results = () => {
 
   const handleCompare = () => {
     const suburbs = results.filter((r) => selected.has(r.id));
-    navigate("/compare", { state: { suburbs } });
+    navigate("/compare", { state: { suburbs, goal: answers.goal } });
   };
 
   if (loading) {
