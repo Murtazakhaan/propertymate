@@ -131,7 +131,7 @@ const Index = () => {
         <div className="flex flex-col md:flex-row items-center justify-center gap-6 text-muted-foreground">
           <div className="flex items-center gap-2 text-sm">
             <Shield className="h-4 w-4" />
-            <span>No financial advice — general guidance only</span>
+            <span>General guidance only, not financial advice</span>
           </div>
           <div className="hidden md:block w-px h-4 bg-border" />
           <div className="flex items-center gap-2 text-sm">

@@ -211,7 +211,7 @@ const Compare = () => {
               </td>
               {suburbs.map((s) => (
                 <td key={s.id} className="py-4 px-4 text-sm text-muted-foreground align-top">
-                  {s.reasoning ?? "—"}
+                  {s.reasoning ?? "-"}
                 </td>
               ))}
             </tr>

@@ -6,7 +6,7 @@ const About = () => (
     <div className="text-center space-y-3">
       <h1 className="text-3xl font-bold text-foreground">How Investore Works</h1>
       <p className="text-muted-foreground max-w-xl mx-auto">
-        Investore uses AI to match your goals and preferences with Australian suburb data, giving you a personalised shortlist in minutes.
+        Investore matches your goals and preferences with Australian suburb data, giving you a personalised shortlist in minutes.
       </p>
     </div>
 
