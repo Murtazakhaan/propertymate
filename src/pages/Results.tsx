@@ -42,6 +42,8 @@ interface SuburbResult {
   crime_rate_level: string | null;
   nearest_shopping_centre: string | null;
   infrastructure_projects: string | null;
+  house_weekly_rent: number | null;
+  unit_weekly_rent: number | null;
 }
 
 interface PropertyListing {
