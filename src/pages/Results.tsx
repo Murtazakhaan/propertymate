@@ -3,8 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ArrowLeft, Loader2, MapPin, TrendingUp, Home, Clock, AlertTriangle, Shield, Zap, RotateCcw, GitCompareArrows, ChevronDown } from "lucide-react";
+import { ArrowLeft, Loader2, MapPin, TrendingUp, Home, Clock, AlertTriangle, Shield, Zap, RotateCcw, GitCompareArrows } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuiz } from "@/contexts/QuizContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -221,39 +220,31 @@ const Results = () => {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Collapsible>
-                  <CollapsibleTrigger className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors w-full group">
-                    <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180" />
-                    Financial Breakdown
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="pt-3 space-y-4">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      {suburb.median_price != null && (
-                        <MetricCard icon={Home} label="Median Price" value={`$${(suburb.median_price / 1000).toFixed(0)}k`} />
-                      )}
-                      {suburb.rental_yield != null && (
-                        <MetricCard icon={TrendingUp} label="Rental Yield" value={`${suburb.rental_yield}%`} />
-                      )}
-                      {suburb.vacancy_rate != null && (
-                        <MetricCard icon={AlertTriangle} label="Vacancy Rate" value={`${suburb.vacancy_rate}%`} />
-                      )}
-                      {suburb.days_on_market != null && (
-                        <MetricCard icon={Clock} label="Days on Market" value={`${suburb.days_on_market}`} />
-                      )}
-                    </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {suburb.median_price != null && (
+                    <MetricCard icon={Home} label="Median Price" value={`$${(suburb.median_price / 1000).toFixed(0)}k`} />
+                  )}
+                  {suburb.rental_yield != null && (
+                    <MetricCard icon={TrendingUp} label="Rental Yield" value={`${suburb.rental_yield}%`} />
+                  )}
+                  {suburb.vacancy_rate != null && (
+                    <MetricCard icon={AlertTriangle} label="Vacancy Rate" value={`${suburb.vacancy_rate}%`} />
+                  )}
+                  {suburb.days_on_market != null && (
+                    <MetricCard icon={Clock} label="Days on Market" value={`${suburb.days_on_market}`} />
+                  )}
+                </div>
 
-                    {(suburb.rental_range_low != null || suburb.weekly_out_of_pocket != null) && (
-                      <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                        {suburb.rental_range_low != null && suburb.rental_range_high != null && (
-                          <span>Weekly rent: ${suburb.rental_range_low}–${suburb.rental_range_high}</span>
-                        )}
-                        {suburb.weekly_out_of_pocket != null && (
-                          <span>Est. out-of-pocket: ${suburb.weekly_out_of_pocket}/wk</span>
-                        )}
-                      </div>
+                {(suburb.rental_range_low != null || suburb.weekly_out_of_pocket != null) && (
+                  <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                    {suburb.rental_range_low != null && suburb.rental_range_high != null && (
+                      <span>Weekly rent: ${suburb.rental_range_low}–${suburb.rental_range_high}</span>
                     )}
-                  </CollapsibleContent>
-                </Collapsible>
+                    {suburb.weekly_out_of_pocket != null && (
+                      <span>Est. out-of-pocket: ${suburb.weekly_out_of_pocket}/wk</span>
+                    )}
+                  </div>
+                )}
 
                 {suburb.reasoning && (
                   <p className="text-sm text-muted-foreground border-t pt-3">{suburb.reasoning}</p>
