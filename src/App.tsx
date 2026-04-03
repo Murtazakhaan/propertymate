@@ -11,6 +11,7 @@ import Quiz from "./pages/Quiz";
 import Results from "./pages/Results";
 import About from "./pages/About";
 import Glossary from "./pages/Glossary";
+import Compare from "./pages/Compare";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 
