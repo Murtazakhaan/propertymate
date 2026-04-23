@@ -86,7 +86,19 @@ serve(async (req) => {
 
     if (hasActiveSub) {
       const sub = subscriptions.data[0];
-      subscriptionEnd = new Date(sub.current_period_end * 1000).toISOString();
+      logStep("Raw current_period_end value", { value: sub.current_period_end, type: typeof sub.current_period_end });
+      try {
+        const endVal = sub.current_period_end;
+        if (typeof endVal === "number") {
+          subscriptionEnd = new Date(endVal * 1000).toISOString();
+        } else if (typeof endVal === "string") {
+          const parsed = new Date(endVal);
+          subscriptionEnd = isNaN(parsed.getTime()) ? null : parsed.toISOString();
+        }
+      } catch {
+        logStep("Failed to parse current_period_end, skipping");
+        subscriptionEnd = null;
+      }
       cancelAtPeriodEnd = sub.cancel_at_period_end;
       logStep("Active subscription found via Stripe", { endDate: subscriptionEnd });
     }
