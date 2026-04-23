@@ -7,6 +7,7 @@ import { AppProvider, useApp } from "@/contexts/AppContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { QuizProvider } from "@/contexts/QuizContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import Paywall from "@/components/Paywall";
 import Layout from "@/components/Layout";
 import Index from "./pages/Index";
 import Quiz from "./pages/Quiz";
@@ -28,9 +29,9 @@ const AppContent = () => {
     <Layout beginnerMode={beginnerMode} onToggleBeginnerMode={toggleBeginnerMode}>
       <Routes>
         <Route path="/" element={<Index />} />
-        <Route path="/quiz" element={<ProtectedRoute><Quiz /></ProtectedRoute>} />
-        <Route path="/results" element={<ProtectedRoute><Results /></ProtectedRoute>} />
-        <Route path="/compare" element={<ProtectedRoute><Compare /></ProtectedRoute>} />
+        <Route path="/quiz" element={<ProtectedRoute><Paywall><Quiz /></Paywall></ProtectedRoute>} />
+        <Route path="/results" element={<ProtectedRoute><Paywall><Results /></Paywall></ProtectedRoute>} />
+        <Route path="/compare" element={<ProtectedRoute><Paywall><Compare /></Paywall></ProtectedRoute>} />
         <Route path="/about" element={<About />} />
         <Route path="/glossary" element={<Glossary />} />
         <Route path="/login" element={<Login />} />
