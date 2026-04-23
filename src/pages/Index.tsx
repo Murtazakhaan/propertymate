@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Brain, BookOpen, TrendingUp, ArrowRight, Shield, Sparkles,
-  MapPin, Users, BarChart3, CheckCircle2,
+  MapPin, Users, BarChart3, CheckCircle2, ChevronRight, Star,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -53,34 +53,99 @@ const Index = () => {
   return (
     <div className="flex flex-col">
       {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/8 via-transparent to-investore-green/5" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--primary)/0.08),transparent_60%)]" />
-        <div className="container relative py-16 sm:py-20 md:py-32">
-          <div className="max-w-3xl mx-auto text-center space-y-6">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium animate-fade-in">
-              <Sparkles className="h-4 w-4" />
-              Smart Property Insights for Australia
+      <section className="relative overflow-hidden min-h-[70vh] flex items-center">
+        {/* Background layers */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/6 via-background to-background" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--primary)/0.10),transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,hsl(var(--investore-green)/0.06),transparent_50%)]" />
+        {/* Grid pattern */}
+        <div
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage: "linear-gradient(hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)",
+            backgroundSize: "60px 60px",
+          }}
+        />
+
+        <div className="container relative py-20 sm:py-24 md:py-32 lg:py-40">
+          <div className="max-w-4xl mx-auto text-center space-y-8">
+            {/* Badge */}
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/20 bg-primary/5 text-primary text-sm font-medium animate-fade-in">
+              <Sparkles className="h-3.5 w-3.5" />
+              AI-powered suburb recommendations for Australia
             </div>
-            <h1 className="text-3xl sm:text-4xl md:text-6xl font-extrabold tracking-tight text-foreground animate-fade-in" style={{ animationDelay: "0.1s" }}>
-              Find your next investment suburb{" "}
-              <span className="bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent">in minutes</span>
+
+            {/* Headline */}
+            <h1
+              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.1] text-foreground animate-fade-in"
+              style={{ animationDelay: "0.1s" }}
+            >
+              Stop guessing.
+              <br />
+              <span className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                Start investing smarter.
+              </span>
             </h1>
-            <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto animate-fade-in" style={{ animationDelay: "0.2s" }}>
-              Answer a few questions about your budget, goals, and comfort level. We'll match you with high-potential Australian suburbs in minutes.
+
+            {/* Subheadline */}
+            <p
+              className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto leading-relaxed animate-fade-in"
+              style={{ animationDelay: "0.2s" }}
+            >
+              Answer a few questions. Get matched with high-potential Australian suburbs — backed by real data, not hype.
             </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 animate-fade-in" style={{ animationDelay: "0.3s" }}>
+
+            {/* CTA buttons */}
+            <div
+              className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in pt-2"
+              style={{ animationDelay: "0.3s" }}
+            >
               <Link to={user ? "/quiz" : "/login"}>
-                <Button size="lg" className="text-base px-8 py-6 font-semibold w-full sm:w-auto">
-                  Let's Find My Property
+                <Button
+                  size="lg"
+                  className="text-base sm:text-lg px-8 sm:px-10 py-6 sm:py-7 font-semibold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all duration-300 w-full sm:w-auto"
+                >
+                  Find My Suburb
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
               <Link to="/about">
-                <Button variant="outline" size="lg" className="text-base px-8 py-6 w-full sm:w-auto">
-                  How It Works
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="text-base px-8 py-6 w-full sm:w-auto group"
+                >
+                  See How It Works
+                  <ChevronRight className="ml-1 h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
                 </Button>
               </Link>
+            </div>
+
+            {/* Social proof */}
+            <div
+              className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 pt-4 text-sm text-muted-foreground animate-fade-in"
+              style={{ animationDelay: "0.4s" }}
+            >
+              <div className="flex items-center gap-1.5">
+                <div className="flex -space-x-2">
+                  {[...Array(4)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="w-7 h-7 rounded-full border-2 border-background bg-primary/15 flex items-center justify-center"
+                    >
+                      <Users className="h-3 w-3 text-primary" />
+                    </div>
+                  ))}
+                </div>
+                <span className="ml-1 font-medium">Trusted by investors across AU</span>
+              </div>
+              <div className="hidden sm:block w-px h-4 bg-border" />
+              <div className="flex items-center gap-1">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="h-4 w-4 fill-investore-amber text-investore-amber" />
+                ))}
+                <span className="ml-1 font-medium">Data-driven results</span>
+              </div>
             </div>
           </div>
         </div>
@@ -174,7 +239,7 @@ const Index = () => {
           </div>
           <div className="text-center mt-10 md:mt-12">
             <Link to={user ? "/quiz" : "/login"}>
-              <Button size="lg" className="font-semibold">
+              <Button size="lg" className="font-semibold shadow-md shadow-primary/15">
                 Find My Property
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
