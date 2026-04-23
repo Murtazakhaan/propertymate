@@ -2,7 +2,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check, Crown, Loader2, XCircle, CheckCircle2 } from "lucide-react";
+import { Check, Crown, Loader2, XCircle, CheckCircle2, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useState, useEffect, ReactNode } from "react";
@@ -21,10 +21,11 @@ interface PaywallProps {
 }
 
 const Paywall = ({ children }: PaywallProps) => {
-  const { user, subscribed, checkingSubscription, refreshSubscription } = useAuth();
+  const { user, subscribed, subscriptionStatus, cancelAtPeriodEnd, subscriptionEnd, checkingSubscription, refreshSubscription } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [loadingCheckout, setLoadingCheckout] = useState(false);
+  const [loadingPortal, setLoadingPortal] = useState(false);
   const checkoutStatus = searchParams.get("checkout");
 
   useEffect(() => {
@@ -38,12 +39,24 @@ const Paywall = ({ children }: PaywallProps) => {
     setSearchParams(searchParams, { replace: true });
   };
 
-  // If subscribed and no checkout banner, render children
+  // If subscribed and no checkout banner, render children (with optional warnings)
   if (subscribed && !checkoutStatus) {
-    return <>{children}</>;
+    return (
+      <>
+        {subscriptionStatus === "past_due" && (
+          <div className="bg-destructive/10 border border-destructive/30 text-destructive px-4 py-3 text-sm flex items-center gap-2 justify-center">
+            <AlertTriangle className="h-4 w-4" />
+            <span>Payment failed. Please update your payment method to keep your subscription active.</span>
+            <Button variant="outline" size="sm" className="ml-2 h-7 text-xs" onClick={handlePortal} disabled={loadingPortal}>
+              Update Payment
+            </Button>
+          </div>
+        )}
+        {children}
+      </>
+    );
   }
 
-  // Show loading while checking subscription
   if (checkingSubscription) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -52,7 +65,7 @@ const Paywall = ({ children }: PaywallProps) => {
     );
   }
 
-  const handleCheckout = async () => {
+  async function handleCheckout() {
     if (!user) {
       navigate("/login");
       return;
@@ -69,7 +82,22 @@ const Paywall = ({ children }: PaywallProps) => {
     } finally {
       setLoadingCheckout(false);
     }
-  };
+  }
+
+  async function handlePortal() {
+    setLoadingPortal(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("customer-portal");
+      if (error) throw error;
+      if (data?.url) {
+        window.open(data.url, "_blank");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to open portal");
+    } finally {
+      setLoadingPortal(false);
+    }
+  }
 
   // Success state
   if (checkoutStatus === "success") {
@@ -130,6 +158,23 @@ const Paywall = ({ children }: PaywallProps) => {
         </p>
       </div>
 
+      {/* Show reactivation prompt if cancelled but still in period */}
+      {cancelAtPeriodEnd && subscriptionEnd && new Date(subscriptionEnd) > new Date() && (
+        <Card className="border-amber-500/30 mb-6">
+          <CardContent className="pt-6 pb-4 text-center space-y-3">
+            <AlertTriangle className="h-6 w-6 text-amber-500 mx-auto" />
+            <p className="text-sm">
+              Your subscription is set to cancel on{" "}
+              <strong>{new Date(subscriptionEnd).toLocaleDateString("en-AU", { day: "numeric", month: "long", year: "numeric" })}</strong>.
+            </p>
+            <Button variant="outline" size="sm" onClick={handlePortal} disabled={loadingPortal}>
+              {loadingPortal && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Reactivate Subscription
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       <Card className="border-primary/30 shadow-lg">
         <CardHeader className="text-center pb-2">
           <div className="mx-auto w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-2">
@@ -151,12 +196,7 @@ const Paywall = ({ children }: PaywallProps) => {
             ))}
           </ul>
 
-          <Button
-            className="w-full"
-            size="lg"
-            onClick={handleCheckout}
-            disabled={loadingCheckout}
-          >
+          <Button className="w-full" size="lg" onClick={handleCheckout} disabled={loadingCheckout}>
             {loadingCheckout && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             {user ? "Subscribe Now" : "Sign In to Subscribe"}
           </Button>

@@ -28,7 +28,7 @@ serve(async (req) => {
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
 
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header provided");
+    if (!authHeader?.startsWith("Bearer ")) throw new Error("Invalid authorization header");
 
     const token = authHeader.replace("Bearer ", "");
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
@@ -37,12 +37,37 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { email: user.email });
 
+    // DB-first: check local subscriptions table
+    const { data: dbSub } = await supabaseClient
+      .from("subscriptions")
+      .select("*")
+      .eq("user_id", user.id)
+      .in("status", ["active", "past_due"])
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (dbSub) {
+      logStep("Found subscription in DB", { status: dbSub.status });
+      return new Response(JSON.stringify({
+        subscribed: dbSub.status === "active",
+        subscription_end: dbSub.current_period_end,
+        cancel_at_period_end: dbSub.cancel_at_period_end,
+        status: dbSub.status,
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
+    // Fallback: check Stripe directly
+    logStep("No DB record, checking Stripe");
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
 
     if (customers.data.length === 0) {
       logStep("No Stripe customer found");
-      return new Response(JSON.stringify({ subscribed: false }), {
+      return new Response(JSON.stringify({ subscribed: false, status: "none" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       });
@@ -57,16 +82,20 @@ serve(async (req) => {
 
     const hasActiveSub = subscriptions.data.length > 0;
     let subscriptionEnd = null;
+    let cancelAtPeriodEnd = false;
 
     if (hasActiveSub) {
       const sub = subscriptions.data[0];
       subscriptionEnd = new Date(sub.current_period_end * 1000).toISOString();
-      logStep("Active subscription found", { endDate: subscriptionEnd });
+      cancelAtPeriodEnd = sub.cancel_at_period_end;
+      logStep("Active subscription found via Stripe", { endDate: subscriptionEnd });
     }
 
     return new Response(JSON.stringify({
       subscribed: hasActiveSub,
       subscription_end: subscriptionEnd,
+      cancel_at_period_end: cancelAtPeriodEnd,
+      status: hasActiveSub ? "active" : "none",
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,

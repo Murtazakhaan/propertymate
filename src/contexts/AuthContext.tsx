@@ -2,12 +2,16 @@ import { createContext, useContext, useEffect, useState, useCallback, ReactNode 
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
+type SubscriptionStatus = "none" | "active" | "past_due" | "canceled";
+
 interface AuthContextType {
   session: Session | null;
   user: User | null;
   loading: boolean;
   subscribed: boolean;
   subscriptionEnd: string | null;
+  cancelAtPeriodEnd: boolean;
+  subscriptionStatus: SubscriptionStatus;
   checkingSubscription: boolean;
   signUp: (email: string, password: string, displayName?: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
@@ -23,6 +27,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [subscribed, setSubscribed] = useState(false);
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
+  const [cancelAtPeriodEnd, setCancelAtPeriodEnd] = useState(false);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus>("none");
   const [checkingSubscription, setCheckingSubscription] = useState(false);
 
   const checkSubscription = useCallback(async () => {
@@ -35,6 +41,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       setSubscribed(data?.subscribed ?? false);
       setSubscriptionEnd(data?.subscription_end ?? null);
+      setCancelAtPeriodEnd(data?.cancel_at_period_end ?? false);
+      setSubscriptionStatus((data?.status as SubscriptionStatus) ?? "none");
     } catch (err) {
       console.error("Subscription check failed:", err);
     } finally {
@@ -53,6 +61,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         } else {
           setSubscribed(false);
           setSubscriptionEnd(null);
+          setCancelAtPeriodEnd(false);
+          setSubscriptionStatus("none");
         }
       }
     );
@@ -100,7 +110,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   return (
     <AuthContext.Provider value={{
       session, user, loading,
-      subscribed, subscriptionEnd, checkingSubscription,
+      subscribed, subscriptionEnd, cancelAtPeriodEnd, subscriptionStatus,
+      checkingSubscription,
       signUp, signIn, signOut,
       refreshSubscription: checkSubscription,
     }}>

@@ -2,13 +2,20 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { User, LogOut, Crown, Loader2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { User, LogOut, Crown, Loader2, CreditCard } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
 
+const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+  active: { label: "Pro Active", variant: "default" },
+  past_due: { label: "Past Due", variant: "destructive" },
+  canceled: { label: "Cancelled", variant: "secondary" },
+};
+
 const Account = () => {
-  const { user, signOut, subscribed, subscriptionEnd, refreshSubscription } = useAuth();
+  const { user, signOut, subscribed, subscriptionEnd, cancelAtPeriodEnd, subscriptionStatus, refreshSubscription } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [loadingPortal, setLoadingPortal] = useState(false);
@@ -37,6 +44,12 @@ const Account = () => {
       setLoadingPortal(false);
     }
   };
+
+  const statusInfo = statusConfig[subscriptionStatus] || null;
+
+  const dateLabel = cancelAtPeriodEnd
+    ? `Cancels on ${subscriptionEnd ? new Date(subscriptionEnd).toLocaleDateString("en-AU", { day: "numeric", month: "long", year: "numeric" }) : "—"}`
+    : `Renews on ${subscriptionEnd ? new Date(subscriptionEnd).toLocaleDateString("en-AU", { day: "numeric", month: "long", year: "numeric" }) : "—"}`;
 
   return (
     <div className="container max-w-lg py-16 md:py-24 space-y-6">
@@ -72,31 +85,38 @@ const Account = () => {
           </div>
           <div className="flex items-center justify-center gap-2">
             <CardTitle className="text-xl">Subscription</CardTitle>
-            {subscribed && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-primary px-2.5 py-0.5 text-xs font-semibold text-primary-foreground">
+            {statusInfo && (
+              <Badge variant={statusInfo.variant} className="flex items-center gap-1">
                 <Crown className="h-3 w-3" />
-                Pro Active
-              </span>
+                {statusInfo.label}
+              </Badge>
             )}
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {subscribed ? (
+          {subscribed || subscriptionStatus === "past_due" ? (
             <>
               <div className="rounded-lg bg-primary/10 p-4 text-center space-y-1">
                 <p className="font-semibold text-primary text-lg">Investore Pro</p>
                 {subscriptionEnd && (
-                  <>
-                    <p className="text-sm text-muted-foreground">
-                      Renews on {new Date(subscriptionEnd).toLocaleDateString("en-AU", { day: "numeric", month: "long", year: "numeric" })}
-                    </p>
-                  </>
+                  <p className="text-sm text-muted-foreground">{dateLabel}</p>
+                )}
+                {subscriptionStatus === "past_due" && (
+                  <p className="text-xs text-destructive font-medium mt-1">
+                    ⚠️ Payment failed — please update your payment method
+                  </p>
                 )}
               </div>
-              <Button variant="outline" className="w-full" onClick={handleManage} disabled={loadingPortal}>
-                {loadingPortal && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                Manage Subscription
-              </Button>
+              <div className="flex flex-col gap-2">
+                <Button variant="outline" className="w-full" onClick={handleManage} disabled={loadingPortal}>
+                  {loadingPortal && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  Manage Subscription
+                </Button>
+                <Button variant="ghost" size="sm" className="w-full text-muted-foreground" onClick={handleManage} disabled={loadingPortal}>
+                  <CreditCard className="h-4 w-4 mr-1.5" />
+                  Update Payment Method
+                </Button>
+              </div>
             </>
           ) : (
             <>
