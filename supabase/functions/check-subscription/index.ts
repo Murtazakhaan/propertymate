@@ -86,7 +86,19 @@ serve(async (req) => {
 
     if (hasActiveSub) {
       const sub = subscriptions.data[0];
-      subscriptionEnd = new Date(sub.current_period_end * 1000).toISOString();
+      // In Stripe API 2025-08-27.basil, current_period_end moved to items
+      const itemEnd = (sub as any).items?.data?.[0]?.current_period_end;
+      const endVal = (sub as any).current_period_end ?? itemEnd ?? (sub as any).billing_cycle_anchor;
+      try {
+        if (typeof endVal === "number") {
+          subscriptionEnd = new Date(endVal * 1000).toISOString();
+        } else if (typeof endVal === "string") {
+          const parsed = new Date(endVal);
+          subscriptionEnd = isNaN(parsed.getTime()) ? null : parsed.toISOString();
+        }
+      } catch {
+        subscriptionEnd = null;
+      }
       cancelAtPeriodEnd = sub.cancel_at_period_end;
       logStep("Active subscription found via Stripe", { endDate: subscriptionEnd });
     }
