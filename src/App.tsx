@@ -16,6 +16,7 @@ import Glossary from "./pages/Glossary";
 import Compare from "./pages/Compare";
 import Login from "./pages/Login";
 import Account from "./pages/Account";
+import Pricing from "./pages/Pricing";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
