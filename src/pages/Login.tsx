@@ -27,7 +27,7 @@ const Login = () => {
       if (error) {
         toast({ title: "Sign up failed", description: error.message, variant: "destructive" });
       } else {
-        toast({ title: "Account created", description: "Check your email to confirm your account." });
+        toast({ title: "Account created", description: "Check your email to confirm your account.", duration: 8000 });
       }
     } else {
       const { error } = await signIn(email, password);
