@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { User, LogOut, Crown, Loader2, CreditCard } from "lucide-react";
+import { User, LogOut, Crown, Loader2, CreditCard, Mail, Calendar, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
@@ -51,40 +51,63 @@ const Account = () => {
     ? `Cancels on ${subscriptionEnd ? new Date(subscriptionEnd).toLocaleDateString("en-AU", { day: "numeric", month: "long", year: "numeric" }) : "—"}`
     : `Renews on ${subscriptionEnd ? new Date(subscriptionEnd).toLocaleDateString("en-AU", { day: "numeric", month: "long", year: "numeric" }) : "—"}`;
 
+  const memberSince = user?.created_at
+    ? new Date(user.created_at).toLocaleDateString("en-AU", { month: "long", year: "numeric" })
+    : null;
+
   return (
-    <div className="container max-w-lg py-16 md:py-24 space-y-6">
+    <div className="container max-w-lg py-10 md:py-20 px-4 sm:px-6 space-y-5">
+      {/* Profile card */}
       <Card>
-        <CardHeader className="text-center space-y-2">
-          <div className="mx-auto w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-            <User className="h-6 w-6 text-primary" />
+        <CardHeader className="pb-4">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+              <User className="h-7 w-7 text-primary" />
+            </div>
+            <div className="min-w-0">
+              <CardTitle className="text-xl truncate">
+                {user?.user_metadata?.display_name || "My Account"}
+              </CardTitle>
+              <p className="text-sm text-muted-foreground truncate">{user?.email}</p>
+            </div>
           </div>
-          <CardTitle className="text-xl">My Account</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="rounded-lg bg-muted p-4 space-y-2">
-            <p className="text-sm text-muted-foreground">Email</p>
-            <p className="font-medium">{user?.email}</p>
+        <CardContent className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Mail className="h-4 w-4 shrink-0" />
+              <span className="truncate">{user?.email}</span>
+            </div>
+            {memberSince && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Calendar className="h-4 w-4 shrink-0" />
+                <span>Since {memberSince}</span>
+              </div>
+            )}
           </div>
-          <div className="rounded-lg bg-muted p-4 space-y-2">
-            <p className="text-sm text-muted-foreground">Name</p>
-            <p className="font-medium">
-              {user?.user_metadata?.display_name || "Not set"}
-            </p>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Shield className="h-4 w-4 shrink-0" />
+            <span>Email verified: {user?.email_confirmed_at ? "Yes" : "No"}</span>
           </div>
-          <Button variant="outline" className="w-full" onClick={handleSignOut}>
-            <LogOut className="h-4 w-4 mr-1.5" />
-            Sign Out
-          </Button>
+          <div className="pt-2 border-t">
+            <Button variant="outline" className="w-full" onClick={handleSignOut}>
+              <LogOut className="h-4 w-4 mr-1.5" />
+              Sign Out
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
+      {/* Subscription card */}
       <Card className={subscribed ? "border-primary/40 shadow-md shadow-primary/5" : ""}>
-        <CardHeader className="text-center space-y-2">
-          <div className="mx-auto w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-            <Crown className="h-6 w-6 text-primary" />
-          </div>
-          <div className="flex items-center justify-center gap-2">
-            <CardTitle className="text-xl">Subscription</CardTitle>
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Crown className="h-5 w-5 text-primary" />
+              </div>
+              <CardTitle className="text-lg">Subscription</CardTitle>
+            </div>
             {statusInfo && (
               <Badge variant={statusInfo.variant} className="flex items-center gap-1">
                 <Crown className="h-3 w-3" />
@@ -96,33 +119,37 @@ const Account = () => {
         <CardContent className="space-y-4">
           {subscribed || subscriptionStatus === "past_due" ? (
             <>
-              <div className="rounded-lg bg-primary/10 p-4 text-center space-y-1">
-                <p className="font-semibold text-primary text-lg">Investore Pro</p>
-                {subscriptionEnd && (
-                  <p className="text-sm text-muted-foreground">{dateLabel}</p>
-                )}
+              <div className="rounded-lg bg-gradient-to-r from-primary/10 to-primary/5 p-4 space-y-1">
+                <div className="flex items-center justify-between">
+                  <p className="font-semibold text-primary text-lg">Investore Pro</p>
+                  {subscriptionEnd && (
+                    <p className="text-xs text-muted-foreground">{dateLabel}</p>
+                  )}
+                </div>
                 {subscriptionStatus === "past_due" && (
                   <p className="text-xs text-destructive font-medium mt-1">
                     ⚠️ Payment failed — please update your payment method
                   </p>
                 )}
               </div>
-              <div className="flex flex-col gap-2">
-                <Button variant="outline" className="w-full" onClick={handleManage} disabled={loadingPortal}>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Button variant="outline" className="flex-1" onClick={handleManage} disabled={loadingPortal}>
                   {loadingPortal && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                   Manage Subscription
                 </Button>
-                <Button variant="ghost" size="sm" className="w-full text-muted-foreground" onClick={handleManage} disabled={loadingPortal}>
+                <Button variant="ghost" size="sm" className="flex-1 text-muted-foreground" onClick={handleManage} disabled={loadingPortal}>
                   <CreditCard className="h-4 w-4 mr-1.5" />
-                  Update Payment Method
+                  Update Payment
                 </Button>
               </div>
             </>
           ) : (
             <>
-              <p className="text-sm text-muted-foreground text-center">
-                You're on the free plan. Upgrade to Pro for full access.
-              </p>
+              <div className="rounded-lg bg-muted p-4 text-center space-y-2">
+                <p className="text-sm text-muted-foreground">
+                  You're on the free plan. Upgrade to Pro for full suburb analysis, comparisons, and shortlisting.
+                </p>
+              </div>
               <Button className="w-full" onClick={() => navigate("/pricing")}>
                 <Crown className="h-4 w-4 mr-1.5" />
                 View Pricing

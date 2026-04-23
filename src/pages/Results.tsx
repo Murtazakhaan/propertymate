@@ -7,10 +7,12 @@ import {
   ArrowLeft, Loader2, MapPin, TrendingUp, Home, Clock, AlertTriangle,
   Shield, Zap, RotateCcw, GitCompareArrows, Hospital, GraduationCap,
   Train, ShieldCheck, ShoppingBag, Wrench, Building2, ExternalLink,
+  Bookmark, BookmarkCheck, ArrowUpDown,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuiz } from "@/contexts/QuizContext";
 import { useApp } from "@/contexts/AppContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -58,6 +60,8 @@ interface PropertyListing {
   image_url: string | null;
 }
 
+type SortOption = "match" | "price-low" | "price-high" | "growth";
+
 const buildRealEstateUrl = (suburb: SuburbResult, budget: number | null) => {
   const suburbSlug = suburb.suburb_name.toLowerCase().replace(/\s+/g, "-");
   const stateMap: Record<string, string> = { NSW: "nsw", VIC: "vic", QLD: "qld", WA: "wa", SA: "sa", TAS: "tas", ACT: "act", NT: "nt" };
@@ -70,6 +74,7 @@ const buildRealEstateUrl = (suburb: SuburbResult, budget: number | null) => {
 const Results = () => {
   const { answers } = useQuiz();
   const { beginnerMode } = useApp();
+  const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [results, setResults] = useState<SuburbResult[]>([]);
@@ -78,15 +83,17 @@ const Results = () => {
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [expandedListings, setExpandedListings] = useState<Set<string>>(new Set());
+  const [shortlisted, setShortlisted] = useState<Set<string>>(new Set());
+  const [sortBy, setSortBy] = useState<SortOption>("match");
 
   const labels = metricLabels(beginnerMode);
   const isOwnerOccupier = answers.goal === "first-home";
   const isInvestor = answers.goal === "investment";
 
   const riskConfig = {
-    low: { color: "bg-green-100 text-green-800", icon: Shield, label: labels.riskLow },
-    medium: { color: "bg-yellow-100 text-yellow-800", icon: AlertTriangle, label: labels.riskMedium },
-    high: { color: "bg-red-100 text-red-800", icon: Zap, label: labels.riskHigh },
+    low: { color: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400", icon: Shield, label: labels.riskLow },
+    medium: { color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400", icon: AlertTriangle, label: labels.riskMedium },
+    high: { color: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400", icon: Zap, label: labels.riskHigh },
   };
 
   useEffect(() => {
@@ -97,6 +104,21 @@ const Results = () => {
     }
     fetchResults();
   }, []);
+
+  // Load existing shortlists
+  useEffect(() => {
+    if (!user) return;
+    const loadShortlists = async () => {
+      const { data } = await supabase
+        .from("shortlists")
+        .select("suburb_result_id")
+        .eq("user_id", user.id);
+      if (data) {
+        setShortlisted(new Set(data.map((s) => s.suburb_result_id)));
+      }
+    };
+    loadShortlists();
+  }, [user]);
 
   const fetchResults = async () => {
     setLoading(true);
@@ -155,6 +177,27 @@ const Results = () => {
     });
   };
 
+  const toggleShortlist = async (suburbId: string) => {
+    if (!user) {
+      toast({ title: "Sign in required", description: "Please sign in to save suburbs." });
+      return;
+    }
+    const isShortlisted = shortlisted.has(suburbId);
+    if (isShortlisted) {
+      await supabase.from("shortlists").delete().eq("user_id", user.id).eq("suburb_result_id", suburbId);
+      setShortlisted((prev) => {
+        const next = new Set(prev);
+        next.delete(suburbId);
+        return next;
+      });
+      toast({ title: "Removed from shortlist" });
+    } else {
+      await supabase.from("shortlists").insert({ user_id: user.id, suburb_result_id: suburbId });
+      setShortlisted((prev) => new Set(prev).add(suburbId));
+      toast({ title: "Added to shortlist" });
+    }
+  };
+
   const toggleListings = (id: string) => {
     setExpandedListings((prev) => {
       const next = new Set(prev);
@@ -171,20 +214,45 @@ const Results = () => {
   const getListingsForSuburb = (suburbId: string) =>
     listings.filter((l) => l.suburb_result_id === suburbId);
 
+  const sortedResults = [...results].sort((a, b) => {
+    switch (sortBy) {
+      case "price-low":
+        return (a.median_price ?? Infinity) - (b.median_price ?? Infinity);
+      case "price-high":
+        return (b.median_price ?? 0) - (a.median_price ?? 0);
+      case "growth":
+        return (b.capital_growth_rate ?? 0) - (a.capital_growth_rate ?? 0);
+      default:
+        return b.match_score - a.match_score;
+    }
+  });
+
   if (loading) {
     return (
       <div className="container max-w-4xl py-10 md:py-16">
         <div className="text-center space-y-6 py-20">
-          <Loader2 className="h-12 w-12 text-primary mx-auto animate-spin" />
+          <div className="relative mx-auto w-16 h-16">
+            <Loader2 className="h-16 w-16 text-primary animate-spin" />
+          </div>
           <div>
             <h1 className="text-2xl font-bold text-foreground">
               {beginnerMode ? "Finding suburbs for you…" : "Analysing suburbs…"}
             </h1>
-            <p className="text-muted-foreground mt-2">
+            <p className="text-muted-foreground mt-2 max-w-md mx-auto">
               {beginnerMode
                 ? "We're searching through thousands of suburbs to find the best ones for you. This takes about 10 to 20 seconds."
                 : "Crunching market data to find your best matches. This usually takes 10 to 20 seconds."}
             </p>
+          </div>
+          {/* Progress dots */}
+          <div className="flex justify-center gap-2">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="w-2 h-2 rounded-full bg-primary animate-pulse"
+                style={{ animationDelay: `${i * 0.3}s` }}
+              />
+            ))}
           </div>
         </div>
       </div>
@@ -216,17 +284,35 @@ const Results = () => {
     );
   }
 
-  const sortedResults = [...results].sort((a, b) => b.match_score - a.match_score);
-
   return (
-    <div className="container max-w-5xl py-10 md:py-16">
-      <div className="text-center space-y-2 mb-10">
-        <h1 className="text-2xl md:text-3xl font-bold text-foreground">{labels.topMatches}</h1>
-        <p className="text-muted-foreground">{labels.topMatchesDesc}</p>
+    <div className="container max-w-5xl py-8 md:py-16 px-4 sm:px-6">
+      <div className="text-center space-y-2 mb-6 md:mb-10">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">{labels.topMatches}</h1>
+        <p className="text-sm sm:text-base text-muted-foreground">{labels.topMatchesDesc}</p>
+      </div>
+
+      {/* Sort & compare bar */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
+        <div className="flex items-center gap-2">
+          <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as SortOption)}
+            className="text-sm bg-muted rounded-md px-3 py-1.5 border-0 text-foreground focus:ring-2 focus:ring-primary"
+          >
+            <option value="match">Best Match</option>
+            <option value="price-low">Price: Low → High</option>
+            <option value="price-high">Price: High → Low</option>
+            <option value="growth">Growth Rate</option>
+          </select>
+        </div>
+        <div className="text-sm text-muted-foreground">
+          {results.length} suburbs found
+        </div>
       </div>
 
       {selected.size >= 2 && (
-        <div className="sticky top-4 z-20 mb-6 flex items-center justify-between bg-primary text-primary-foreground rounded-lg px-5 py-3 shadow-lg">
+        <div className="sticky top-4 z-20 mb-6 flex items-center justify-between bg-primary text-primary-foreground rounded-lg px-4 sm:px-5 py-3 shadow-lg">
           <span className="text-sm font-medium">{selected.size} suburbs selected</span>
           <Button size="sm" variant="secondary" onClick={handleCompare}>
             <GitCompareArrows className="mr-2 h-4 w-4" />Compare Now
@@ -234,11 +320,12 @@ const Results = () => {
         </div>
       )}
 
-      <div className="grid gap-6">
+      <div className="grid gap-4 md:gap-6">
         {sortedResults.map((suburb, index) => {
           const risk = riskConfig[suburb.risk_level as keyof typeof riskConfig] ?? riskConfig.medium;
           const RiskIcon = risk.icon;
           const isSelected = selected.has(suburb.id);
+          const isBookmarked = shortlisted.has(suburb.id);
           const suburbListings = getListingsForSuburb(suburb.id);
           const showListings = expandedListings.has(suburb.id);
 
@@ -246,29 +333,29 @@ const Results = () => {
             <Card
               key={suburb.id}
               className={cn(
-                "overflow-hidden transition-all",
-                isSelected && "ring-2 ring-primary"
+                "overflow-hidden transition-all duration-200",
+                isSelected && "ring-2 ring-primary shadow-lg shadow-primary/10"
               )}
             >
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-center gap-3">
+              <CardHeader className="pb-3 px-4 sm:px-6">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-2 sm:gap-3 min-w-0">
                     <Checkbox
                       checked={isSelected}
                       onCheckedChange={() => toggleSelect(suburb.id)}
-                      className="mt-1"
+                      className="mt-1.5 shrink-0"
                       aria-label={`Select ${suburb.suburb_name} for comparison`}
                     />
                     <div className={cn(
-                      "flex items-center justify-center w-10 h-10 rounded-full font-bold text-lg shrink-0",
+                      "hidden sm:flex items-center justify-center w-10 h-10 rounded-full font-bold text-lg shrink-0",
                       index === 0 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
                     )}>
                       {index + 1}
                     </div>
-                    <div>
-                      <CardTitle className="text-xl">
-                        <MapPin className="inline h-4 w-4 mr-1 text-primary" />
-                        {suburb.suburb_name}, {suburb.state} {suburb.postcode ?? ""}
+                    <div className="min-w-0">
+                      <CardTitle className="text-base sm:text-xl flex items-center gap-1 flex-wrap">
+                        <MapPin className="inline h-4 w-4 text-primary shrink-0" />
+                        <span className="truncate">{suburb.suburb_name}, {suburb.state} {suburb.postcode ?? ""}</span>
                       </CardTitle>
                       <div className="flex items-center gap-2 mt-1 flex-wrap">
                         {suburb.best_for_tag && (
@@ -282,17 +369,29 @@ const Results = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-3xl font-bold text-primary">{suburb.match_score}%</div>
-                    <div className="text-xs text-muted-foreground">
-                      {beginnerMode ? "Fit" : "Match"}
+                  <div className="flex items-start gap-2 shrink-0">
+                    <button
+                      onClick={() => toggleShortlist(suburb.id)}
+                      className={cn(
+                        "p-1.5 rounded-md transition-colors",
+                        isBookmarked ? "text-primary" : "text-muted-foreground hover:text-primary"
+                      )}
+                      aria-label={isBookmarked ? "Remove from shortlist" : "Add to shortlist"}
+                    >
+                      {isBookmarked ? <BookmarkCheck className="h-5 w-5" /> : <Bookmark className="h-5 w-5" />}
+                    </button>
+                    <div className="text-right">
+                      <div className="text-2xl sm:text-3xl font-bold text-primary">{suburb.match_score}%</div>
+                      <div className="text-xs text-muted-foreground">
+                        {beginnerMode ? "Fit" : "Match"}
+                      </div>
                     </div>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 px-4 sm:px-6">
                 {/* Key metrics */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4">
                   {suburb.median_price != null && (
                     <MetricCard icon={Home} label={labels.medianPrice} value={`$${(suburb.median_price / 1000).toFixed(0)}k`} />
                   )}
@@ -302,11 +401,9 @@ const Results = () => {
                   {suburb.population_growth != null && (
                     <MetricCard icon={TrendingUp} label={labels.populationGrowth} value={`${suburb.population_growth}%`} />
                   )}
-                  {/* Stamp duty for both paths */}
                   {suburb.stamp_duty_estimate != null && (
                     <MetricCard icon={Building2} label={labels.stampDuty} value={`$${(suburb.stamp_duty_estimate / 1000).toFixed(0)}k`} />
                   )}
-                  {/* Investor-only metrics */}
                   {isInvestor && suburb.rental_yield != null && (
                     <MetricCard icon={TrendingUp} label={labels.rentalYield} value={`${suburb.rental_yield}%`} />
                   )}
@@ -317,7 +414,7 @@ const Results = () => {
 
                 {/* Owner occupier: amenities */}
                 {isOwnerOccupier && (
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {suburb.nearest_hospital && (
                       <AmenityItem icon={Hospital} label={labels.nearestHospital} value={suburb.nearest_hospital} />
                     )}
@@ -389,13 +486,13 @@ const Results = () => {
                       <div className="mt-3 grid gap-2">
                         {suburbListings.map((listing) => (
                           <div key={listing.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 text-sm">
-                            <div>
-                              <p className="font-medium text-foreground">{listing.address}</p>
+                            <div className="min-w-0">
+                              <p className="font-medium text-foreground truncate">{listing.address}</p>
                               <p className="text-xs text-muted-foreground">
                                 {listing.property_type} · {listing.bedrooms} bed · {listing.bathrooms} bath
                               </p>
                             </div>
-                            <div className="text-right">
+                            <div className="text-right shrink-0 ml-3">
                               <p className="font-bold text-primary">${listing.price.toLocaleString()}</p>
                             </div>
                           </div>
@@ -423,7 +520,7 @@ const Results = () => {
         })}
       </div>
 
-      <div className="flex justify-center gap-3 mt-10">
+      <div className="flex justify-center gap-3 mt-8 md:mt-10">
         <Link to="/quiz">
           <Button variant="outline" size="lg">
             <RotateCcw className="mr-2 h-4 w-4" />Start Over
@@ -437,17 +534,17 @@ const Results = () => {
 const MetricCard = ({ icon: Icon, label, value }: { icon: any; label: string; value: string }) => (
   <div className="bg-muted/50 rounded-lg p-3 text-center">
     <Icon className="h-4 w-4 mx-auto text-muted-foreground mb-1" />
-    <div className="font-semibold text-foreground">{value}</div>
-    <div className="text-xs text-muted-foreground">{label}</div>
+    <div className="font-semibold text-foreground text-sm sm:text-base">{value}</div>
+    <div className="text-[11px] sm:text-xs text-muted-foreground leading-tight">{label}</div>
   </div>
 );
 
 const AmenityItem = ({ icon: Icon, label, value }: { icon: any; label: string; value: string }) => (
   <div className="flex items-center gap-2 text-sm p-2 rounded-lg bg-muted/30">
     <Icon className="h-4 w-4 text-primary shrink-0" />
-    <div>
+    <div className="min-w-0">
       <div className="text-xs text-muted-foreground">{label}</div>
-      <div className="font-medium text-foreground capitalize">{value}</div>
+      <div className="font-medium text-foreground capitalize truncate">{value}</div>
     </div>
   </div>
 );
