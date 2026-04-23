@@ -65,22 +65,32 @@ const Account = () => {
         </CardContent>
       </Card>
 
-      <Card className={subscribed ? "border-primary/30" : ""}>
+      <Card className={subscribed ? "border-primary/40 shadow-md shadow-primary/5" : ""}>
         <CardHeader className="text-center space-y-2">
           <div className="mx-auto w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
             <Crown className="h-6 w-6 text-primary" />
           </div>
-          <CardTitle className="text-xl">Subscription</CardTitle>
+          <div className="flex items-center justify-center gap-2">
+            <CardTitle className="text-xl">Subscription</CardTitle>
+            {subscribed && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-primary px-2.5 py-0.5 text-xs font-semibold text-primary-foreground">
+                <Crown className="h-3 w-3" />
+                Pro Active
+              </span>
+            )}
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           {subscribed ? (
             <>
-              <div className="rounded-lg bg-primary/10 p-4 text-center">
-                <p className="font-medium text-primary">Investore Pro — Active ✓</p>
+              <div className="rounded-lg bg-primary/10 p-4 text-center space-y-1">
+                <p className="font-semibold text-primary text-lg">Investore Pro</p>
                 {subscriptionEnd && (
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Renews {new Date(subscriptionEnd).toLocaleDateString()}
-                  </p>
+                  <>
+                    <p className="text-sm text-muted-foreground">
+                      Renews on {new Date(subscriptionEnd).toLocaleDateString("en-AU", { day: "numeric", month: "long", year: "numeric" })}
+                    </p>
+                  </>
                 )}
               </div>
               <Button variant="outline" className="w-full" onClick={handleManage} disabled={loadingPortal}>
