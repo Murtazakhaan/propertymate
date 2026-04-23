@@ -86,10 +86,9 @@ serve(async (req) => {
 
     if (hasActiveSub) {
       const sub = subscriptions.data[0];
-      logStep("Subscription keys", { keys: Object.keys(sub) });
-      // Try multiple possible field names for period end
-      const endVal = (sub as any).current_period_end ?? (sub as any).billing_cycle_anchor;
-      logStep("Raw end value", { value: endVal, type: typeof endVal });
+      // In Stripe API 2025-08-27.basil, current_period_end moved to items
+      const itemEnd = (sub as any).items?.data?.[0]?.current_period_end;
+      const endVal = (sub as any).current_period_end ?? itemEnd ?? (sub as any).billing_cycle_anchor;
       try {
         if (typeof endVal === "number") {
           subscriptionEnd = new Date(endVal * 1000).toISOString();
