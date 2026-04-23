@@ -16,6 +16,7 @@ import Glossary from "./pages/Glossary";
 import Compare from "./pages/Compare";
 import Login from "./pages/Login";
 import Account from "./pages/Account";
+import Pricing from "./pages/Pricing";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const AppContent = () => {
         <Route path="/glossary" element={<Glossary />} />
         <Route path="/login" element={<Login />} />
         <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
+        <Route path="/pricing" element={<Pricing />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Layout>
