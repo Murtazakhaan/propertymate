@@ -86,9 +86,11 @@ serve(async (req) => {
 
     if (hasActiveSub) {
       const sub = subscriptions.data[0];
-      logStep("Raw current_period_end value", { value: sub.current_period_end, type: typeof sub.current_period_end });
+      logStep("Subscription keys", { keys: Object.keys(sub) });
+      // Try multiple possible field names for period end
+      const endVal = (sub as any).current_period_end ?? (sub as any).billing_cycle_anchor;
+      logStep("Raw end value", { value: endVal, type: typeof endVal });
       try {
-        const endVal = sub.current_period_end;
         if (typeof endVal === "number") {
           subscriptionEnd = new Date(endVal * 1000).toISOString();
         } else if (typeof endVal === "string") {
@@ -96,7 +98,6 @@ serve(async (req) => {
           subscriptionEnd = isNaN(parsed.getTime()) ? null : parsed.toISOString();
         }
       } catch {
-        logStep("Failed to parse current_period_end, skipping");
         subscriptionEnd = null;
       }
       cancelAtPeriodEnd = sub.cancel_at_period_end;
