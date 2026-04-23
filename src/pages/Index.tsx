@@ -82,7 +82,7 @@ const Index = () => {
             >
               Stop guessing.
               <br />
-              <span className="bg-gradient-to-r from-primary via-blue-400 to-primary bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
                 Start investing smarter.
               </span>
             </h1>
