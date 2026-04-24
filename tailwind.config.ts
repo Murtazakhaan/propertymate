@@ -50,11 +50,11 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        investore: {
-          blue: "hsl(var(--investore-blue))",
-          green: "hsl(var(--investore-green))",
-          amber: "hsl(var(--investore-amber))",
-          red: "hsl(var(--investore-red))",
+        brand: {
+          blue: "hsl(var(--brand-blue))",
+          green: "hsl(var(--brand-green))",
+          amber: "hsl(var(--brand-amber))",
+          red: "hsl(var(--brand-red))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",

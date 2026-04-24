@@ -14,6 +14,57 @@ function jsonResponse(body: unknown, status = 200) {
   });
 }
 
+const STATE_SLUG: Record<string, string> = {
+  NSW: "nsw", VIC: "vic", QLD: "qld", WA: "wa", SA: "sa", TAS: "tas", ACT: "act", NT: "nt",
+};
+
+function slugify(s: string) {
+  return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
+/**
+ * Build deep-link search URLs that always land on a real currently-listed
+ * property page on each portal. Filtered by suburb, beds, and price band.
+ */
+function buildListingUrls(
+  suburb: string,
+  state: string,
+  postcode: string | null,
+  bedsMin: number,
+  priceMin: number,
+  priceMax: number,
+  propertyType: string,
+) {
+  const stateSlug = STATE_SLUG[state] ?? state.toLowerCase();
+  const suburbSlug = slugify(suburb);
+  const pc = postcode ?? "";
+
+  // realestate.com.au
+  const reaParams: string[] = [];
+  if (priceMin) reaParams.push(`minPrice=${priceMin}`);
+  if (priceMax) reaParams.push(`maxPrice=${priceMax}`);
+  if (bedsMin) reaParams.push(`minBeds=${bedsMin}`);
+  const reaQs = reaParams.length ? `?${reaParams.join("&")}` : "";
+  const realestate_url = `https://www.realestate.com.au/buy/in-${suburbSlug},+${stateSlug}+${pc}/list-1${reaQs}`;
+
+  // Domain
+  const domainParams: string[] = [];
+  if (priceMin) domainParams.push(`price=${priceMin}-${priceMax || "any"}`);
+  else if (priceMax) domainParams.push(`price=0-${priceMax}`);
+  if (bedsMin) domainParams.push(`bedrooms=${bedsMin}-any`);
+  const ptype = propertyType.toLowerCase();
+  if (ptype.includes("house")) domainParams.push("ptype=house");
+  else if (ptype.includes("unit") || ptype.includes("apartment")) domainParams.push("ptype=apartment-unit-flat");
+  else if (ptype.includes("townhouse")) domainParams.push("ptype=townhouse");
+  const domainQs = domainParams.length ? `?${domainParams.join("&")}` : "";
+  const domain_url = `https://www.domain.com.au/sale/${suburbSlug}-${stateSlug}-${pc}/${domainQs}`;
+
+  const fmtPrice = (n: number) => `$${Math.round(n / 1000)}k`;
+  const search_label = `${bedsMin}+ bed ${propertyType} · ${fmtPrice(priceMin)}–${fmtPrice(priceMax)}`;
+
+  return { realestate_url, domain_url, search_label };
+}
+
 function buildOwnerOccupierPrompt(params: any) {
   const budgetInfo = params.budget_unknown
     ? "Budget unknown - estimate based on income and deposit."
@@ -32,10 +83,13 @@ BUYER PROFILE:
 - Timeline: ${params.timeline}
 
 For each suburb provide:
-- Realistic Australian market data (median price, capital growth rate, population growth)
+- Realistic Australian market data (median price, capital growth rate, population growth, total population, median age, household composition like "Mostly families with kids" or "Mix of professionals and young families")
+- A short 2-3 sentence suburb history covering origin, transformation and recent developments
 - Stamp duty estimate for that state (apply first home buyer concessions if applicable)
 - Local amenities: nearest hospital name, number of schools within 5km, whether there's a train station, crime rate level (low/medium/high), nearest shopping centre name
-- 5 realistic property listings matching the buyer's budget and preferences from that suburb (realistic addresses, prices in budget range, bedroom/bathroom counts, property type)
+- 4 property listing PROFILES (NOT specific addresses) matching the buyer's budget. Each profile is property_type + bedrooms + bathrooms + price band (price_min, price_max) + expected_weekly_rent.
+
+DO NOT invent specific street addresses. We will deep-link to real listings on realestate.com.au and domain.com.au using these profiles.
 
 Match scores should reflect liveability, affordability, and amenity access.`;
 }
@@ -71,10 +125,14 @@ INVESTOR PROFILE:
 
 For each suburb provide:
 - ${params.investor_strategy === "capital-growth" ? "Focus on capital growth rate, population growth, and upcoming infrastructure" : "Focus on rental yield, vacancy rate, and rental income potential"}
+- Total population, median age, household composition (e.g. "60% renters, mostly young professionals")
+- A short 2-3 sentence suburb history covering origin, transformation and recent developments
 - Stamp duty estimate for that state
 - Infrastructure projects in the area that could boost property values
 - Separate weekly rental return for houses and units (house_weekly_rent, unit_weekly_rent)
-- 5 realistic investment property listings matching the budget (realistic addresses, prices, bedroom/bathroom counts, property type House or Unit, expected weekly rent)
+- 4 property listing PROFILES (NOT specific addresses) — property_type (House/Unit/Townhouse), bedrooms, bathrooms, price_min, price_max, expected_weekly_rent.
+
+DO NOT invent specific street addresses. We will deep-link to real listings on realestate.com.au and domain.com.au.
 
 Match scores should reflect ${params.investor_strategy === "capital-growth" ? "growth potential and infrastructure development" : "rental yield and tenant demand"}.`;
 }
@@ -84,7 +142,7 @@ function buildNotSurePrompt(params: any) {
     ? "Budget unknown - estimate based on income and deposit."
     : `Budget range: $${params.budget_min?.toLocaleString() ?? "?"} - $${params.budget_max?.toLocaleString() ?? "?"}`;
 
-  return `You are an Australian property analyst. The buyer is exploring options and isn't sure if they want to live in the property or invest.
+  return `You are an Australian property analyst. The buyer is exploring options.
 
 BUYER PROFILE:
 - Goal: Exploring options
@@ -96,10 +154,24 @@ BUYER PROFILE:
 - Risk tolerance: ${params.risk_growth_preference ?? 50}/100
 - Timeline: ${params.timeline}
 
-For each suburb provide well-rounded data covering both liveability and investment potential. Include capital growth, amenities, and 5 property listings.`;
+For each suburb provide well-rounded data covering both liveability and investment potential. Include population_total, median_age, household_composition, suburb_history, capital growth, amenities, and 4 property listing PROFILES (property_type, bedrooms, bathrooms, price_min, price_max, expected_weekly_rent — NO specific addresses).`;
 }
 
 function getToolSchema(goal: string) {
+  const listingItem = {
+    type: "object",
+    properties: {
+      property_type: { type: "string", description: "House, Unit, Townhouse, or Apartment" },
+      bedrooms: { type: "integer" },
+      bathrooms: { type: "integer" },
+      price_min: { type: "integer", description: "Lower bound of price band in AUD" },
+      price_max: { type: "integer", description: "Upper bound of price band in AUD" },
+      expected_weekly_rent: { type: "integer", description: "Expected weekly rent in AUD" },
+    },
+    required: ["property_type", "bedrooms", "bathrooms", "price_min", "price_max", "expected_weekly_rent"],
+    additionalProperties: false,
+  };
+
   const baseProperties: any = {
     suburb_name: { type: "string" },
     state: { type: "string", enum: ["NSW", "VIC", "QLD", "WA", "SA", "TAS", "ACT", "NT"] },
@@ -108,57 +180,52 @@ function getToolSchema(goal: string) {
     median_price: { type: "integer", description: "Median house price in AUD" },
     capital_growth_rate: { type: "number", description: "Annual capital growth percentage" },
     population_growth: { type: "number", description: "Annual population growth percentage" },
+    population_total: { type: "integer", description: "Approximate total suburb population" },
+    median_age: { type: "integer", description: "Median age of residents" },
+    household_composition: { type: "string", description: "e.g. 'Mostly families with kids', '60% renters, young professionals'" },
+    suburb_history: { type: "string", description: "2-3 sentence narrative on origin, key development phases, recent transformation" },
     best_for_tag: { type: "string", description: "Short tag like 'Best Growth', 'Most Affordable', 'Best Location', 'Best Overall'" },
     confidence: { type: "string", enum: ["low", "medium", "high"] },
     reasoning: { type: "string", description: "2-3 sentence explanation of why this suburb matches" },
     listings: {
       type: "array",
-      description: "5 property listings matching the buyer's budget",
-      items: {
-        type: "object",
-        properties: {
-          address: { type: "string" },
-          price: { type: "integer" },
-          bedrooms: { type: "integer" },
-          bathrooms: { type: "integer" },
-          property_type: { type: "string", description: "e.g. House, Unit, Townhouse, Apartment" },
-        },
-        required: ["address", "price", "bedrooms", "bathrooms", "property_type"],
-        additionalProperties: false,
-      },
+      description: "4 property listing profiles matching the buyer's budget (NO specific addresses)",
+      items: listingItem,
     },
   };
 
-  const baseRequired = ["suburb_name", "state", "postcode", "match_score", "median_price", "capital_growth_rate", "population_growth", "best_for_tag", "confidence", "reasoning", "listings"];
+  const baseRequired = [
+    "suburb_name", "state", "postcode", "match_score", "median_price",
+    "capital_growth_rate", "population_growth", "population_total", "median_age",
+    "household_composition", "suburb_history",
+    "best_for_tag", "confidence", "reasoning", "listings",
+  ];
 
   if (goal === "first-home") {
-    // Owner occupier: amenities + stamp duty
     Object.assign(baseProperties, {
-      stamp_duty_estimate: { type: "integer", description: "Estimated stamp duty in AUD (apply first home concessions if applicable)" },
-      nearest_hospital: { type: "string", description: "Name of nearest hospital" },
-      num_schools: { type: "integer", description: "Number of schools within 5km" },
-      has_train_station: { type: "boolean", description: "Whether suburb has a train station" },
+      stamp_duty_estimate: { type: "integer" },
+      nearest_hospital: { type: "string" },
+      num_schools: { type: "integer" },
+      has_train_station: { type: "boolean" },
       crime_rate_level: { type: "string", enum: ["low", "medium", "high"] },
-      nearest_shopping_centre: { type: "string", description: "Name of nearest shopping centre" },
+      nearest_shopping_centre: { type: "string" },
     });
     baseRequired.push("stamp_duty_estimate", "nearest_hospital", "num_schools", "has_train_station", "crime_rate_level", "nearest_shopping_centre");
   } else if (goal === "investment") {
-    // Investor: rental metrics + infrastructure + stamp duty + house/unit rent
     Object.assign(baseProperties, {
-      stamp_duty_estimate: { type: "integer", description: "Estimated stamp duty in AUD" },
-      rental_yield: { type: "number", description: "Gross rental yield percentage" },
-      vacancy_rate: { type: "number", description: "Vacancy rate percentage" },
-      days_on_market: { type: "integer", description: "Average days on market" },
-      rental_range_low: { type: "integer", description: "Weekly rent low end in AUD" },
-      rental_range_high: { type: "integer", description: "Weekly rent high end in AUD" },
-      weekly_out_of_pocket: { type: "integer", description: "Estimated weekly out-of-pocket cost after rent" },
-      infrastructure_projects: { type: "string", description: "Upcoming infrastructure projects in the area" },
-      house_weekly_rent: { type: "integer", description: "Typical weekly rent for a house in AUD" },
-      unit_weekly_rent: { type: "integer", description: "Typical weekly rent for a unit in AUD" },
+      stamp_duty_estimate: { type: "integer" },
+      rental_yield: { type: "number" },
+      vacancy_rate: { type: "number" },
+      days_on_market: { type: "integer" },
+      rental_range_low: { type: "integer" },
+      rental_range_high: { type: "integer" },
+      weekly_out_of_pocket: { type: "integer" },
+      infrastructure_projects: { type: "string" },
+      house_weekly_rent: { type: "integer" },
+      unit_weekly_rent: { type: "integer" },
     });
     baseRequired.push("stamp_duty_estimate", "rental_yield", "vacancy_rate", "infrastructure_projects", "house_weekly_rent", "unit_weekly_rent");
   } else {
-    // Not sure: include a mix
     Object.assign(baseProperties, {
       rental_yield: { type: "number" },
       vacancy_rate: { type: "number" },
@@ -216,11 +283,18 @@ serve(async (req) => {
       return jsonResponse({ error: "goal and timeline are required" }, 400);
     }
 
-    // 1. Save quiz submission
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
+
+    // Resolve user from JWT if present
+    let resolvedUserId: string | null = user_id ?? null;
+    const authHeader = req.headers.get("Authorization");
+    if (!resolvedUserId && authHeader) {
+      const { data } = await supabaseAdmin.auth.getUser(authHeader.replace("Bearer ", ""));
+      resolvedUserId = data.user?.id ?? null;
+    }
 
     const { data: submission, error: insertError } = await supabaseAdmin
       .from("quiz_submissions")
@@ -236,7 +310,7 @@ serve(async (req) => {
         home_age_preference,
         risk_growth_preference: risk_growth_preference ?? 50,
         timeline,
-        user_id: user_id || null,
+        user_id: resolvedUserId,
         is_first_home: is_first_home ?? null,
         existing_property_address: existing_property_address || null,
         existing_property_value: existing_property_value ?? null,
@@ -253,17 +327,11 @@ serve(async (req) => {
 
     const submissionId = submission.id;
 
-    // 2. Build prompt based on goal
     let prompt: string;
-    if (goal === "first-home") {
-      prompt = buildOwnerOccupierPrompt(params);
-    } else if (goal === "investment") {
-      prompt = buildInvestorPrompt(params);
-    } else {
-      prompt = buildNotSurePrompt(params);
-    }
+    if (goal === "first-home") prompt = buildOwnerOccupierPrompt(params);
+    else if (goal === "investment") prompt = buildInvestorPrompt(params);
+    else prompt = buildNotSurePrompt(params);
 
-    // 3. Call AI
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       return jsonResponse({ error: "AI service not configured" }, 500);
@@ -282,7 +350,7 @@ serve(async (req) => {
           messages: [
             {
               role: "system",
-              content: "You are an expert Australian property analyst. Return structured suburb recommendations using the provided tool. Use realistic Australian suburb names, postcodes, and market data.",
+              content: "You are an expert Australian property analyst. Return structured suburb recommendations using the provided tool. Use realistic Australian suburb names, postcodes, and market data. NEVER invent specific street addresses for property listings — provide listing PROFILES (type, beds, baths, price band) only.",
             },
             { role: "user", content: prompt },
           ],
@@ -317,7 +385,6 @@ serve(async (req) => {
 
     const { suburbs } = JSON.parse(toolCall.function.arguments);
 
-    // 4. Save results to DB
     const suburbRows = suburbs.map((s: any) => ({
       quiz_submission_id: submissionId,
       suburb_name: s.suburb_name,
@@ -329,6 +396,10 @@ serve(async (req) => {
       rental_yield: s.rental_yield ?? null,
       vacancy_rate: s.vacancy_rate ?? null,
       population_growth: s.population_growth,
+      population_total: s.population_total ?? null,
+      median_age: s.median_age ?? null,
+      household_composition: s.household_composition ?? null,
+      suburb_history: s.suburb_history ?? null,
       days_on_market: s.days_on_market ?? null,
       rental_range_low: s.rental_range_low ?? null,
       rental_range_high: s.rental_range_high ?? null,
@@ -358,19 +429,34 @@ serve(async (req) => {
       return jsonResponse({ error: "Failed to save results" }, 500);
     }
 
-    // 5. Save property listings
+    // Build listing rows with deep-link URLs
     const allListings: any[] = [];
     for (const result of savedResults) {
       const matchingSuburb = suburbs.find((s: any) => s.suburb_name === result.suburb_name);
       if (matchingSuburb?.listings) {
         for (const listing of matchingSuburb.listings) {
+          const urls = buildListingUrls(
+            result.suburb_name,
+            result.state,
+            result.postcode,
+            listing.bedrooms,
+            listing.price_min,
+            listing.price_max,
+            listing.property_type,
+          );
           allListings.push({
             suburb_result_id: result.id,
-            address: listing.address,
-            price: listing.price,
+            address: null,
+            price: Math.round((listing.price_min + listing.price_max) / 2),
+            price_min: listing.price_min,
+            price_max: listing.price_max,
             bedrooms: listing.bedrooms,
+            bedrooms_min: listing.bedrooms,
             bathrooms: listing.bathrooms,
             property_type: listing.property_type,
+            realestate_url: urls.realestate_url,
+            domain_url: urls.domain_url,
+            search_label: urls.search_label,
           });
         }
       }
@@ -380,19 +466,36 @@ serve(async (req) => {
       const { error: listingsError } = await supabaseAdmin
         .from("property_listings")
         .insert(allListings);
-
       if (listingsError) {
         console.error("Listings insert error:", listingsError);
-        // Non-fatal: results still valid
       }
     }
 
-    // 6. Fetch listings to return with results
     const resultIds = savedResults.map((r: any) => r.id);
     const { data: listings } = await supabaseAdmin
       .from("property_listings")
       .select("*")
       .in("suburb_result_id", resultIds);
+
+    // Fire-and-forget: dispatch match alerts to user's preferred channels
+    if (resolvedUserId) {
+      const topSuburb = savedResults[0];
+      try {
+        await supabaseAdmin.functions.invoke("send-alert", {
+          body: {
+            user_id: resolvedUserId,
+            type: "new_match",
+            title: "Your top 3 suburbs are ready",
+            body: topSuburb
+              ? `We've matched ${savedResults.length} suburbs — top pick: ${topSuburb.suburb_name}, ${topSuburb.state}.`
+              : `We've matched ${savedResults.length} suburbs for you.`,
+            link: "/results",
+          },
+        });
+      } catch (err) {
+        console.error("send-alert dispatch failed (non-fatal):", err);
+      }
+    }
 
     return jsonResponse({
       submission_id: submissionId,

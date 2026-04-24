@@ -17,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { metricLabels } from "@/lib/metric-labels";
+import SuburbReportButton from "@/components/SuburbReportButton";
 
 interface SuburbResult {
   id: string;
@@ -51,24 +52,28 @@ interface SuburbResult {
 interface PropertyListing {
   id: string;
   suburb_result_id: string;
-  address: string;
-  price: number;
+  address: string | null;
+  price: number | null;
+  price_min: number | null;
+  price_max: number | null;
   bedrooms: number | null;
   bathrooms: number | null;
   property_type: string | null;
   link: string | null;
   image_url: string | null;
+  realestate_url: string | null;
+  domain_url: string | null;
+  search_label: string | null;
 }
 
 type SortOption = "match" | "price-low" | "price-high" | "growth";
 
-const buildRealEstateUrl = (suburb: SuburbResult, budget: number | null) => {
-  const suburbSlug = suburb.suburb_name.toLowerCase().replace(/\s+/g, "-");
-  const stateMap: Record<string, string> = { NSW: "nsw", VIC: "vic", QLD: "qld", WA: "wa", SA: "sa", TAS: "tas", ACT: "act", NT: "nt" };
-  const stateSlug = stateMap[suburb.state] || suburb.state.toLowerCase();
-  let url = `https://www.realestate.com.au/buy/in-${suburbSlug},+${stateSlug}+${suburb.postcode ?? ""}/list-1`;
-  if (budget) url += `?maxPrice=${budget}`;
-  return url;
+const fmtPriceBand = (l: PropertyListing) => {
+  if (l.price_min != null && l.price_max != null) {
+    return `$${(l.price_min / 1000).toFixed(0)}k–$${(l.price_max / 1000).toFixed(0)}k`;
+  }
+  if (l.price != null) return `$${l.price.toLocaleString()}`;
+  return "Price on request";
 };
 
 const Results = () => {
@@ -485,15 +490,43 @@ const Results = () => {
                     {showListings && (
                       <div className="mt-3 grid gap-2">
                         {suburbListings.map((listing) => (
-                          <div key={listing.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 text-sm">
-                            <div className="min-w-0">
-                              <p className="font-medium text-foreground truncate">{listing.address}</p>
-                              <p className="text-xs text-muted-foreground">
-                                {listing.property_type} · {listing.bedrooms} bed · {listing.bathrooms} bath
-                              </p>
+                          <div key={listing.id} className="p-3 rounded-lg bg-muted/30 text-sm space-y-2">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                <p className="font-medium text-foreground">
+                                  {listing.search_label ?? `${listing.bedrooms ?? "?"}-bed ${listing.property_type ?? ""}`}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {listing.property_type} · {listing.bedrooms ?? "?"} bed · {listing.bathrooms ?? "?"} bath
+                                </p>
+                              </div>
+                              <div className="text-right shrink-0">
+                                <p className="font-bold text-primary text-sm">{fmtPriceBand(listing)}</p>
+                              </div>
                             </div>
-                            <div className="text-right shrink-0 ml-3">
-                              <p className="font-bold text-primary">${listing.price.toLocaleString()}</p>
+                            <div className="flex flex-wrap gap-2">
+                              {listing.realestate_url && (
+                                <a
+                                  href={listing.realestate_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors"
+                                >
+                                  <ExternalLink className="h-3 w-3" />
+                                  realestate.com.au
+                                </a>
+                              )}
+                              {listing.domain_url && (
+                                <a
+                                  href={listing.domain_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors"
+                                >
+                                  <ExternalLink className="h-3 w-3" />
+                                  Domain
+                                </a>
+                              )}
                             </div>
                           </div>
                         ))}
@@ -502,17 +535,9 @@ const Results = () => {
                   </div>
                 )}
 
-                {/* Browse on realestate.com.au */}
-                <div className="border-t pt-3">
-                  <a
-                    href={buildRealEstateUrl(suburb, answers.budget)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                    {labels.browseListings}
-                  </a>
+                {/* Download report */}
+                <div className="border-t pt-3 flex flex-wrap gap-2">
+                  <SuburbReportButton suburbResultId={suburb.id} suburbName={suburb.suburb_name} />
                 </div>
               </CardContent>
             </Card>
