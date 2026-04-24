@@ -1,6 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
 
 type Theme = "light" | "dark";
 
@@ -19,10 +18,9 @@ const getInitialTheme = (): Theme => {
 };
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
-  const { user } = useAuth();
   const [theme, setTheme] = useState<Theme>(getInitialTheme);
-  // Tracks whether the current `theme` value originated from the user's saved profile.
-  // Prevents the initial local theme from overwriting the stored preference on login.
+  const [userId, setUserId] = useState<string | null>(null);
+  // Tracks whether the current `theme` value has been hydrated from the user's profile.
   const hydratedFromProfileRef = useRef(false);
   const lastSyncedUserIdRef = useRef<string | null>(null);
 
@@ -34,22 +32,33 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem("theme", theme);
   }, [theme]);
 
-  // When the user logs in, load their saved preference
+  // Track auth state directly via supabase (avoids coupling to AuthProvider order)
   useEffect(() => {
-    if (!user) {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUserId(session?.user?.id ?? null);
+    });
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUserId(session?.user?.id ?? null);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Load saved preference when user logs in
+  useEffect(() => {
+    if (!userId) {
       hydratedFromProfileRef.current = false;
       lastSyncedUserIdRef.current = null;
       return;
     }
-    if (lastSyncedUserIdRef.current === user.id) return;
-    lastSyncedUserIdRef.current = user.id;
+    if (lastSyncedUserIdRef.current === userId) return;
+    lastSyncedUserIdRef.current = userId;
 
     let cancelled = false;
     (async () => {
       const { data, error } = await supabase
         .from("profiles")
         .select("theme_preference")
-        .eq("user_id", user.id)
+        .eq("user_id", userId)
         .maybeSingle();
       if (cancelled) return;
       if (error) {
@@ -61,31 +70,30 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
         hydratedFromProfileRef.current = true;
         setTheme(saved);
       } else {
-        // No saved preference yet — persist current theme as the user's choice
         hydratedFromProfileRef.current = true;
         await supabase
           .from("profiles")
           .update({ theme_preference: theme })
-          .eq("user_id", user.id);
+          .eq("user_id", userId);
       }
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [user, theme]);
+  }, [userId, theme]);
 
   // Persist theme changes to the profile after hydration
   useEffect(() => {
-    if (!user || !hydratedFromProfileRef.current) return;
+    if (!userId || !hydratedFromProfileRef.current) return;
     supabase
       .from("profiles")
       .update({ theme_preference: theme })
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .then(({ error }) => {
         if (error) console.error("Failed to save theme preference:", error);
       });
-  }, [theme, user]);
+  }, [theme, userId]);
 
   const toggleTheme = () => setTheme((prev) => (prev === "dark" ? "light" : "dark"));
 
