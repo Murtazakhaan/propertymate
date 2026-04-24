@@ -6,94 +6,95 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 220 20% 10%;
+    /* investoreau.com palette: deep forest green + warm gold on cream */
+    --background: 40 33% 96%;
+    --foreground: 155 40% 12%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 20% 10%;
+    --card-foreground: 155 40% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 20% 10%;
+    --popover-foreground: 155 40% 12%;
 
-    --primary: 221 83% 53%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 155 45% 14%;
+    --primary-foreground: 40 33% 96%;
 
-    --secondary: 220 14% 96%;
-    --secondary-foreground: 220 20% 10%;
+    --secondary: 40 25% 92%;
+    --secondary-foreground: 155 40% 12%;
 
-    --muted: 220 14% 96%;
-    --muted-foreground: 220 9% 46%;
+    --muted: 40 20% 90%;
+    --muted-foreground: 155 15% 35%;
 
-    --accent: 220 14% 96%;
-    --accent-foreground: 220 20% 10%;
+    --accent: 40 60% 55%;
+    --accent-foreground: 155 45% 14%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 70% 45%;
+    --destructive-foreground: 40 33% 96%;
 
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 221 83% 53%;
+    --border: 40 15% 85%;
+    --input: 40 15% 85%;
+    --ring: 40 60% 55%;
 
     --radius: 0.75rem;
 
-    /* PropertyMate brand tokens */
-    --brand-blue: 221 83% 53%;
-    --brand-green: 142 71% 45%;
-    --brand-amber: 38 92% 50%;
-    --brand-red: 0 84% 60%;
+    /* Brand tokens — mapped to investoreau palette */
+    --brand-blue: 155 45% 14%;     /* deep forest green (primary) */
+    --brand-green: 155 40% 25%;    /* mid forest green */
+    --brand-amber: 40 60% 55%;     /* warm gold */
+    --brand-red: 0 70% 45%;
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 221 83% 53%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 14% 96%;
-    --sidebar-accent-foreground: 220 20% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 221 83% 53%;
+    --sidebar-background: 40 33% 96%;
+    --sidebar-foreground: 155 40% 12%;
+    --sidebar-primary: 155 45% 14%;
+    --sidebar-primary-foreground: 40 33% 96%;
+    --sidebar-accent: 40 25% 92%;
+    --sidebar-accent-foreground: 155 40% 12%;
+    --sidebar-border: 40 15% 85%;
+    --sidebar-ring: 40 60% 55%;
   }
 
   .dark {
-    --background: 222 47% 6%;
-    --foreground: 210 40% 98%;
+    --background: 155 45% 8%;
+    --foreground: 40 33% 96%;
 
-    --card: 222 47% 8%;
-    --card-foreground: 210 40% 98%;
+    --card: 155 42% 11%;
+    --card-foreground: 40 33% 96%;
 
-    --popover: 222 47% 8%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 155 42% 11%;
+    --popover-foreground: 40 33% 96%;
 
-    --primary: 221 83% 53%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 40 60% 55%;
+    --primary-foreground: 155 45% 8%;
 
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 155 35% 16%;
+    --secondary-foreground: 40 33% 96%;
 
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 155 30% 18%;
+    --muted-foreground: 40 15% 70%;
 
-    --accent: 217 33% 17%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 40 60% 55%;
+    --accent-foreground: 155 45% 8%;
 
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 65% 45%;
+    --destructive-foreground: 40 33% 96%;
 
-    --border: 217 33% 17%;
-    --input: 217 33% 17%;
-    --ring: 221 83% 53%;
+    --border: 155 30% 20%;
+    --input: 155 30% 20%;
+    --ring: 40 60% 55%;
 
-    --brand-blue: 221 83% 53%;
-    --brand-green: 142 71% 45%;
-    --brand-amber: 38 92% 50%;
-    --brand-red: 0 84% 60%;
+    --brand-blue: 155 45% 14%;
+    --brand-green: 155 40% 30%;
+    --brand-amber: 40 60% 55%;
+    --brand-red: 0 65% 45%;
 
-    --sidebar-background: 222 47% 6%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 221 83% 53%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 217 33% 17%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217 33% 17%;
-    --sidebar-ring: 221 83% 53%;
+    --sidebar-background: 155 45% 8%;
+    --sidebar-foreground: 40 33% 96%;
+    --sidebar-primary: 40 60% 55%;
+    --sidebar-primary-foreground: 155 45% 8%;
+    --sidebar-accent: 155 35% 16%;
+    --sidebar-accent-foreground: 40 33% 96%;
+    --sidebar-border: 155 30% 20%;
+    --sidebar-ring: 40 60% 55%;
   }
 }
 
