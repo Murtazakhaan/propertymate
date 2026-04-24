@@ -6,95 +6,98 @@
 
 @layer base {
   :root {
-    /* investoreau.com palette: deep forest green + warm gold on cream */
+    /* investoreau.com palette: deep forest green + warm gold */
     --background: 40 33% 96%;
-    --foreground: 155 40% 12%;
+    --foreground: 155 45% 12%;
 
     --card: 0 0% 100%;
-    --card-foreground: 155 40% 12%;
+    --card-foreground: 155 45% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 155 40% 12%;
+    --popover-foreground: 155 45% 12%;
 
-    --primary: 155 45% 14%;
+    /* Primary = deep forest green */
+    --primary: 155 50% 13%;
     --primary-foreground: 40 33% 96%;
 
-    --secondary: 40 25% 92%;
-    --secondary-foreground: 155 40% 12%;
+    --secondary: 155 25% 92%;
+    --secondary-foreground: 155 50% 13%;
 
     --muted: 40 20% 90%;
-    --muted-foreground: 155 15% 35%;
+    --muted-foreground: 155 20% 30%;
 
-    --accent: 40 60% 55%;
-    --accent-foreground: 155 45% 14%;
+    /* Accent = warm gold */
+    --accent: 40 65% 52%;
+    --accent-foreground: 155 50% 13%;
 
     --destructive: 0 70% 45%;
     --destructive-foreground: 40 33% 96%;
 
-    --border: 40 15% 85%;
-    --input: 40 15% 85%;
-    --ring: 40 60% 55%;
+    --border: 155 15% 85%;
+    --input: 155 15% 85%;
+    --ring: 40 65% 52%;
 
     --radius: 0.75rem;
 
-    /* Brand tokens — mapped to investoreau palette */
-    --brand-blue: 155 45% 14%;     /* deep forest green (primary) */
-    --brand-green: 155 40% 25%;    /* mid forest green */
-    --brand-amber: 40 60% 55%;     /* warm gold */
+    /* Brand tokens — strictly the two-color palette */
+    --brand-blue: 155 50% 13%;     /* deep forest green */
+    --brand-green: 155 50% 13%;    /* deep forest green (alias) */
+    --brand-amber: 40 65% 52%;     /* warm gold */
     --brand-red: 0 70% 45%;
 
     --sidebar-background: 40 33% 96%;
-    --sidebar-foreground: 155 40% 12%;
-    --sidebar-primary: 155 45% 14%;
+    --sidebar-foreground: 155 50% 13%;
+    --sidebar-primary: 155 50% 13%;
     --sidebar-primary-foreground: 40 33% 96%;
-    --sidebar-accent: 40 25% 92%;
-    --sidebar-accent-foreground: 155 40% 12%;
-    --sidebar-border: 40 15% 85%;
-    --sidebar-ring: 40 60% 55%;
+    --sidebar-accent: 40 65% 52%;
+    --sidebar-accent-foreground: 155 50% 13%;
+    --sidebar-border: 155 15% 85%;
+    --sidebar-ring: 40 65% 52%;
   }
 
   .dark {
-    --background: 155 45% 8%;
+    --background: 155 50% 8%;
     --foreground: 40 33% 96%;
 
-    --card: 155 42% 11%;
+    --card: 155 48% 11%;
     --card-foreground: 40 33% 96%;
 
-    --popover: 155 42% 11%;
+    --popover: 155 48% 11%;
     --popover-foreground: 40 33% 96%;
 
-    --primary: 40 60% 55%;
-    --primary-foreground: 155 45% 8%;
+    /* In dark mode, gold becomes primary CTA on green canvas */
+    --primary: 40 65% 55%;
+    --primary-foreground: 155 50% 8%;
 
-    --secondary: 155 35% 16%;
+    --secondary: 155 40% 16%;
     --secondary-foreground: 40 33% 96%;
 
-    --muted: 155 30% 18%;
-    --muted-foreground: 40 15% 70%;
+    --muted: 155 35% 18%;
+    --muted-foreground: 40 20% 75%;
 
-    --accent: 40 60% 55%;
-    --accent-foreground: 155 45% 8%;
+    --accent: 40 65% 55%;
+    --accent-foreground: 155 50% 8%;
 
     --destructive: 0 65% 45%;
     --destructive-foreground: 40 33% 96%;
 
-    --border: 155 30% 20%;
-    --input: 155 30% 20%;
-    --ring: 40 60% 55%;
+    --border: 155 35% 20%;
+    --input: 155 35% 20%;
+    --ring: 40 65% 55%;
 
-    --brand-blue: 155 45% 14%;
-    --brand-green: 155 40% 30%;
-    --brand-amber: 40 60% 55%;
+    --brand-blue: 155 50% 13%;
+    --brand-green: 155 50% 13%;
+    --brand-amber: 40 65% 55%;
     --brand-red: 0 65% 45%;
 
-    --sidebar-background: 155 45% 8%;
+    --sidebar-background: 155 50% 8%;
     --sidebar-foreground: 40 33% 96%;
-    --sidebar-primary: 40 60% 55%;
-    --sidebar-primary-foreground: 155 45% 8%;
-    --sidebar-accent: 155 35% 16%;
+    --sidebar-primary: 40 65% 55%;
+    --sidebar-primary-foreground: 155 50% 8%;
+    --sidebar-accent: 155 40% 16%;
     --sidebar-accent-foreground: 40 33% 96%;
-    --sidebar-border: 155 30% 20%;
-    --sidebar-ring: 40 60% 55%;
+    --sidebar-border: 155 35% 20%;
+    --sidebar-ring: 40 65% 55%;
   }
 }
 
