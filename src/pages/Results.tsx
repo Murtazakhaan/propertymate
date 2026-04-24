@@ -114,6 +114,24 @@ const Results = () => {
     high: { color: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400", icon: Zap, label: labels.riskHigh },
   };
 
+  // Persist last loaded submission per user (or anon) so refresh keeps the goal
+  const cacheKey = `results:lastSubmission:${user?.id ?? "anon"}`;
+  const readCache = (): { sid: string; goal: string } | null => {
+    try {
+      const raw = localStorage.getItem(cacheKey);
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  };
+  const writeCache = (sid: string, goal: string) => {
+    try {
+      localStorage.setItem(cacheKey, JSON.stringify({ sid, goal }));
+    } catch {
+      /* ignore quota errors */
+    }
+  };
+
   useEffect(() => {
     // Priority 1: Deep-link with submission id (from notification)
     const sid = searchParams.get("sid");
@@ -126,7 +144,14 @@ const Results = () => {
       fetchResults();
       return;
     }
-    // Priority 3: Logged-in user → load most recent saved results
+    // Priority 3: Cached submission from a previous visit (survives refresh)
+    const cached = readCache();
+    if (cached?.sid) {
+      setLoadedGoal(cached.goal); // hydrate badge immediately
+      loadFromSubmission(cached.sid);
+      return;
+    }
+    // Priority 4: Logged-in user → load most recent saved results
     if (user) {
       loadLatestSubmission();
       return;
@@ -208,6 +233,7 @@ const Results = () => {
     setResults(suburbs as SuburbResult[]);
     setListings((lst ?? []) as PropertyListing[]);
     setLoadedGoal(goal);
+    writeCache(submissionId, goal);
     return true;
   };
 
