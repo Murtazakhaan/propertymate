@@ -6,6 +6,7 @@ import {
   MapPin, Users, BarChart3, CheckCircle2, Bell, FileText,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import heroVisual from "@/assets/hero-visual.jpg";
 
 const valueProps = [
   {
