@@ -20,13 +20,15 @@ const SuburbReportButton = ({ suburbResultId, suburbName }: Props) => {
         toast.error("Please sign in to download reports");
         return;
       }
-      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-suburb-report`;
+      const SUPABASE_URL = "https://lidsdymtwltwsakeyewg.supabase.co";
+      const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxpZHNkeW10d2x0d3Nha2V5ZXdnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwMTYwNzMsImV4cCI6MjA5MDU5MjA3M30.xdlP51QLSD39is1waJsvpi3uuhKEMyRFldRheCwSbSE";
+      const url = `${SUPABASE_URL}/functions/v1/generate-suburb-report`;
       const res = await fetch(url, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${session.access_token}`,
           "Content-Type": "application/json",
-          apikey: import.meta.env.VITE_SUPABASE_ANON_KEY ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? "",
+          apikey: SUPABASE_ANON,
         },
         body: JSON.stringify({ suburb_result_id: suburbResultId }),
       });
