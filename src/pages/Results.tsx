@@ -415,7 +415,7 @@ const Results = () => {
 
       {/* Sort & compare bar */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
           <select
             value={sortBy}
@@ -427,6 +427,11 @@ const Results = () => {
             <option value="price-high">Price: High → Low</option>
             <option value="growth">Growth Rate</option>
           </select>
+          {effectiveGoal && (
+            <Badge variant="outline" className="text-xs">
+              Goal: {goalLabel(effectiveGoal)}
+            </Badge>
+          )}
         </div>
         <div className="text-sm text-muted-foreground">
           {results.length} suburbs found
