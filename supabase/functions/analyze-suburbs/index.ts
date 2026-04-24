@@ -489,7 +489,7 @@ serve(async (req) => {
             body: topSuburb
               ? `We've matched ${savedResults.length} suburbs — top pick: ${topSuburb.suburb_name}, ${topSuburb.state}.`
               : `We've matched ${savedResults.length} suburbs for you.`,
-            link: "/results",
+            link: `/results?sid=${submissionId}`,
           },
         });
       } catch (err) {
