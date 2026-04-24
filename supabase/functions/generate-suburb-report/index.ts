@@ -244,7 +244,7 @@ serve(async (req) => {
         type: "report_ready",
         title: `Suburb report ready: ${suburb.suburb_name}`,
         body: `Your PropertyMate profile report for ${suburb.suburb_name}, ${suburb.state} has been generated.`,
-        link: "/results",
+        link: `/results?sid=${suburb.quiz_submission_id}`,
         suburb_result_id,
       });
       if (notifErr) console.error("Notif insert failed:", notifErr);

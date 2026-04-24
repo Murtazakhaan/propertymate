@@ -9,7 +9,7 @@ import {
   Train, ShieldCheck, ShoppingBag, Wrench, Building2, ExternalLink,
   Bookmark, BookmarkCheck, ArrowUpDown,
 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuiz } from "@/contexts/QuizContext";
 import { useApp } from "@/contexts/AppContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -82,6 +82,7 @@ const Results = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [results, setResults] = useState<SuburbResult[]>([]);
   const [listings, setListings] = useState<PropertyListing[]>([]);
   const [loading, setLoading] = useState(true);
@@ -90,10 +91,12 @@ const Results = () => {
   const [expandedListings, setExpandedListings] = useState<Set<string>>(new Set());
   const [shortlisted, setShortlisted] = useState<Set<string>>(new Set());
   const [sortBy, setSortBy] = useState<SortOption>("match");
+  const [loadedGoal, setLoadedGoal] = useState<string | null>(null);
 
   const labels = metricLabels(beginnerMode);
-  const isOwnerOccupier = answers.goal === "first-home";
-  const isInvestor = answers.goal === "investment";
+  const effectiveGoal = answers.goal ?? loadedGoal;
+  const isOwnerOccupier = effectiveGoal === "first-home";
+  const isInvestor = effectiveGoal === "investment";
 
   const riskConfig = {
     low: { color: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400", icon: Shield, label: labels.riskLow },
@@ -102,13 +105,90 @@ const Results = () => {
   };
 
   useEffect(() => {
-    if (!answers.goal || !answers.timeline) {
+    // Priority 1: Deep-link with submission id (from notification)
+    const sid = searchParams.get("sid");
+    if (sid) {
+      loadFromSubmission(sid);
+      return;
+    }
+    // Priority 2: Fresh quiz answers in memory → run analysis
+    if (answers.goal && answers.timeline) {
+      fetchResults();
+      return;
+    }
+    // Priority 3: Logged-in user → load most recent saved results
+    if (user) {
+      loadLatestSubmission();
+      return;
+    }
+    setLoading(false);
+    setError("no-quiz");
+  }, [user]);
+
+  const loadFromSubmission = async (submissionId: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { data: sub, error: subErr } = await supabase
+        .from("quiz_submissions")
+        .select("id, goal")
+        .eq("id", submissionId)
+        .maybeSingle();
+      if (subErr) throw subErr;
+      if (!sub) throw new Error("Submission not found");
+      await loadResultsForSubmission(sub.id, sub.goal);
+    } catch (e: any) {
+      console.error("Load submission error:", e);
+      setError(e?.message || "Could not load saved results");
+    } finally {
       setLoading(false);
+    }
+  };
+
+  const loadLatestSubmission = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { data: subs, error: subErr } = await supabase
+        .from("quiz_submissions")
+        .select("id, goal")
+        .eq("user_id", user!.id)
+        .order("created_at", { ascending: false })
+        .limit(1);
+      if (subErr) throw subErr;
+      if (!subs || subs.length === 0) {
+        setError("no-quiz");
+        return;
+      }
+      await loadResultsForSubmission(subs[0].id, subs[0].goal);
+    } catch (e: any) {
+      console.error("Load latest error:", e);
+      setError(e?.message || "Could not load your saved results");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadResultsForSubmission = async (submissionId: string, goal: string) => {
+    const { data: suburbs, error: sErr } = await supabase
+      .from("suburb_results")
+      .select("*")
+      .eq("quiz_submission_id", submissionId)
+      .order("match_score", { ascending: false });
+    if (sErr) throw sErr;
+    if (!suburbs || suburbs.length === 0) {
       setError("no-quiz");
       return;
     }
-    fetchResults();
-  }, []);
+    const ids = suburbs.map((s) => s.id);
+    const { data: lst } = await supabase
+      .from("property_listings")
+      .select("*")
+      .in("suburb_result_id", ids);
+    setResults(suburbs as SuburbResult[]);
+    setListings((lst ?? []) as PropertyListing[]);
+    setLoadedGoal(goal);
+  };
 
   // Load existing shortlists
   useEffect(() => {
