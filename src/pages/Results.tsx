@@ -161,6 +161,7 @@ const Results = () => {
         return;
       }
       await loadResultsForSubmission(subs[0].id, subs[0].goal);
+      toast({ title: "Opened latest match" });
     } catch (e: any) {
       console.error("Load latest error:", e);
       setError(e?.message || "Could not load your saved results");
