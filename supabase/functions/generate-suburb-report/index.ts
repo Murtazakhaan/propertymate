@@ -238,14 +238,19 @@ serve(async (req) => {
     const html = buildHtml(enriched, listings ?? [], userEmail);
 
     // Drop a "report ready" notification
-    await supabase.from("notifications").insert({
-      user_id: userId,
-      type: "report_ready",
-      title: `Suburb report ready: ${suburb.suburb_name}`,
-      body: `Your PropertyMate profile report for ${suburb.suburb_name}, ${suburb.state} has been generated.`,
-      link: "/results",
-      suburb_result_id,
-    }).catch((e) => console.error("Notif insert failed:", e));
+    try {
+      const { error: notifErr } = await supabase.from("notifications").insert({
+        user_id: userId,
+        type: "report_ready",
+        title: `Suburb report ready: ${suburb.suburb_name}`,
+        body: `Your PropertyMate profile report for ${suburb.suburb_name}, ${suburb.state} has been generated.`,
+        link: "/results",
+        suburb_result_id,
+      });
+      if (notifErr) console.error("Notif insert failed:", notifErr);
+    } catch (e) {
+      console.error("Notif insert threw:", e);
+    }
 
     // Return HTML — browser prints to PDF via window.print() as a fallback.
     // For a true PDF we'd need a headless renderer; serving printable HTML
