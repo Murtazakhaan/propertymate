@@ -19,9 +19,17 @@ const formatTime = (iso: string) => {
 
 const NotificationBell = () => {
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
+  const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const handleNotificationClick = (n: { id: string; link: string | null; read_at: string | null }) => {
+    if (!n.read_at) markAsRead(n.id);
+    setOpen(false);
+    if (n.link) navigate(n.link);
+  };
 
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button
           className="relative p-2 rounded-md hover:bg-muted transition-colors"
@@ -56,29 +64,34 @@ const NotificationBell = () => {
             <ul className="divide-y">
               {notifications.map((n) => {
                 const isUnread = !n.read_at;
-                const content = (
-                  <div
-                    className={cn(
-                      "px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer",
-                      isUnread && "bg-primary/5"
-                    )}
-                    onClick={() => isUnread && markAsRead(n.id)}
-                  >
-                    <div className="flex items-start gap-2">
-                      {isUnread && <span className="mt-1.5 w-2 h-2 rounded-full bg-primary shrink-0" />}
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-foreground truncate">{n.title}</p>
-                        {n.body && (
-                          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{n.body}</p>
-                        )}
-                        <p className="text-[10px] text-muted-foreground mt-1">{formatTime(n.created_at)}</p>
-                      </div>
-                    </div>
-                  </div>
-                );
                 return (
                   <li key={n.id}>
-                    {n.link ? <Link to={n.link}>{content}</Link> : content}
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => handleNotificationClick(n)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          handleNotificationClick(n);
+                        }
+                      }}
+                      className={cn(
+                        "px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer outline-none focus-visible:bg-muted/50",
+                        isUnread && "bg-primary/5"
+                      )}
+                    >
+                      <div className="flex items-start gap-2">
+                        {isUnread && <span className="mt-1.5 w-2 h-2 rounded-full bg-primary shrink-0" />}
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-foreground truncate">{n.title}</p>
+                          {n.body && (
+                            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{n.body}</p>
+                          )}
+                          <p className="text-[10px] text-muted-foreground mt-1">{formatTime(n.created_at)}</p>
+                        </div>
+                      </div>
+                    </div>
                   </li>
                 );
               })}
@@ -86,7 +99,7 @@ const NotificationBell = () => {
           )}
         </ScrollArea>
         <div className="border-t px-4 py-2">
-          <Link to="/account">
+          <Link to="/account" onClick={() => setOpen(false)}>
             <Button variant="ghost" size="sm" className="w-full justify-start text-xs">
               <Settings className="h-3 w-3 mr-1.5" /> Notification settings
             </Button>
