@@ -171,7 +171,11 @@ const Results = () => {
         return;
       }
       await loadResultsForSubmission(subs[0].id, subs[0].goal);
-      toast({ title: "Opened latest match" });
+      setOpenedLatest(true);
+      toast({
+        title: "Opened latest match",
+        description: `Showing your most recent ${goalLabel(subs[0].goal)} search.`,
+      });
     } catch (e: any) {
       console.error("Load latest error:", e);
       setError(e?.message || "Could not load your saved results");
