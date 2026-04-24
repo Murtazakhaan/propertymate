@@ -6,6 +6,7 @@ import {
   MapPin, Users, BarChart3, CheckCircle2, Bell, FileText,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import heroVisual from "@/assets/hero-visual.jpg";
 
 const valueProps = [
   {
@@ -56,27 +57,44 @@ const Index = () => {
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/8 via-transparent to-brand-green/5" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--primary)/0.08),transparent_60%)]" />
-        <div className="container relative py-16 sm:py-20 md:py-32">
-          <div className="max-w-3xl mx-auto text-center space-y-6">
-            <h1 className="text-3xl sm:text-4xl md:text-6xl font-extrabold tracking-tight text-foreground animate-fade-in" style={{ animationDelay: "0.1s" }}>
-              Skip the buyer's agent.{" "}
-              <span className="bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent">Find your next property with data.</span>
-            </h1>
-            <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto animate-fade-in" style={{ animationDelay: "0.2s" }}>
-              PropertyMate gives you the top 3 high-growth Australian suburbs and matching listings — backed by government, infrastructure, and live market data. No $10,000 buyer's agent fees.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 animate-fade-in" style={{ animationDelay: "0.3s" }}>
-              <Link to={user ? "/quiz" : "/login"}>
-                <Button size="lg" className="text-base px-8 py-6 font-semibold w-full sm:w-auto">
-                  Find My Top 3 Suburbs
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-              </Link>
-              <Link to="/about">
-                <Button variant="outline" size="lg" className="text-base px-8 py-6 w-full sm:w-auto">
-                  How It Works
-                </Button>
-              </Link>
+        <div className="container relative py-12 sm:py-16 md:py-24 lg:py-28">
+          <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+            {/* Copy */}
+            <div className="text-center lg:text-left space-y-5 sm:space-y-6 max-w-2xl mx-auto lg:mx-0">
+              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-[3.75rem] xl:text-7xl font-extrabold tracking-tight leading-[1.05] text-foreground animate-fade-in">
+                Skip the buyer's agent.{" "}
+                <span className="bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent">Find your next property with data.</span>
+              </h1>
+              <p className="text-base sm:text-lg md:text-xl text-muted-foreground leading-relaxed max-w-xl mx-auto lg:mx-0 animate-fade-in" style={{ animationDelay: "0.1s" }}>
+                PropertyMate gives you the top 3 high-growth Australian suburbs and matching listings — backed by government, infrastructure, and live market data. No $10,000 buyer's agent fees.
+              </p>
+              <div className="flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-3 sm:gap-4 pt-2 animate-fade-in" style={{ animationDelay: "0.2s" }}>
+                <Link to={user ? "/quiz" : "/login"} className="w-full sm:w-auto">
+                  <Button size="lg" className="text-base px-8 py-6 font-semibold w-full sm:w-auto">
+                    Find My Top 3 Suburbs
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                </Link>
+                <Link to="/about" className="w-full sm:w-auto">
+                  <Button variant="outline" size="lg" className="text-base px-8 py-6 w-full sm:w-auto">
+                    How It Works
+                  </Button>
+                </Link>
+              </div>
+            </div>
+
+            {/* Visual */}
+            <div className="relative animate-fade-in" style={{ animationDelay: "0.3s" }}>
+              <div className="absolute -inset-6 bg-gradient-to-tr from-primary/20 via-blue-400/10 to-transparent rounded-[2rem] blur-2xl" aria-hidden="true" />
+              <div className="relative rounded-2xl overflow-hidden border border-border/60 shadow-2xl bg-card">
+                <img
+                  src={heroVisual}
+                  alt="PropertyMate suburb intelligence dashboard visualising Australian property data"
+                  width={1280}
+                  height={1280}
+                  className="w-full h-auto object-cover"
+                />
+              </div>
             </div>
           </div>
         </div>
