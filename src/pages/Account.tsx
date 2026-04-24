@@ -7,6 +7,7 @@ import { User, LogOut, Crown, Loader2, CreditCard, Mail, Calendar, Shield } from
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
+import AlertPreferencesCard from "@/components/AlertPreferencesCard";
 
 const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   active: { label: "Pro Active", variant: "default" },
@@ -22,7 +23,7 @@ const Account = () => {
 
   useEffect(() => {
     if (searchParams.get("checkout") === "success") {
-      toast.success("Subscription activated! Welcome to Investore Pro.");
+      toast.success("Subscription activated! Welcome to PropertyMate Pro.");
       refreshSubscription();
     }
   }, [searchParams, refreshSubscription]);
@@ -121,7 +122,7 @@ const Account = () => {
             <>
               <div className="rounded-lg bg-gradient-to-r from-primary/10 to-primary/5 p-4 space-y-1">
                 <div className="flex items-center justify-between">
-                  <p className="font-semibold text-primary text-lg">Investore Pro</p>
+                  <p className="font-semibold text-primary text-lg">PropertyMate Pro</p>
                   {subscriptionEnd && (
                     <p className="text-xs text-muted-foreground">{dateLabel}</p>
                   )}
@@ -158,6 +159,9 @@ const Account = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Notification preferences */}
+      <AlertPreferencesCard />
     </div>
   );
 };

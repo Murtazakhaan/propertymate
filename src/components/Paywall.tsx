@@ -108,7 +108,7 @@ const Paywall = ({ children }: PaywallProps) => {
             <div className="mx-auto w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center">
               <CheckCircle2 className="h-8 w-8 text-green-500" />
             </div>
-            <h2 className="text-2xl font-bold">Welcome to Investore Pro!</h2>
+            <h2 className="text-2xl font-bold">Welcome to PropertyMate Pro!</h2>
             <p className="text-muted-foreground">
               Your subscription is now active. You have full access to all premium features.
             </p>
@@ -152,7 +152,7 @@ const Paywall = ({ children }: PaywallProps) => {
   return (
     <div className="container max-w-lg py-16 md:py-24">
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold mb-2">Unlock Investore Pro</h1>
+        <h1 className="text-3xl font-bold mb-2">Unlock PropertyMate Pro</h1>
         <p className="text-muted-foreground">
           Subscribe to access AI-driven property analysis and premium tools
         </p>

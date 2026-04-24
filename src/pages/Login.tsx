@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { BarChart3 } from "lucide-react";
+import { Home as HomeIcon } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
@@ -51,11 +51,11 @@ const Login = () => {
         {/* Branding */}
         <div className="text-center space-y-2">
           <div className="mx-auto w-12 h-12 rounded-xl bg-primary flex items-center justify-center">
-            <BarChart3 className="h-6 w-6 text-primary-foreground" />
+            <HomeIcon className="h-6 w-6 text-primary-foreground" />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight">Investore</h1>
+          <h1 className="text-2xl font-bold tracking-tight">PropertyMate</h1>
           <p className="text-sm text-muted-foreground">
-            Smart property insights for Australian investors
+            Skip the buyer's agent. Find high-growth suburbs with data.
           </p>
         </div>
 
