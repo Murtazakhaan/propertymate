@@ -92,6 +92,16 @@ const Results = () => {
   const [shortlisted, setShortlisted] = useState<Set<string>>(new Set());
   const [sortBy, setSortBy] = useState<SortOption>("match");
   const [loadedGoal, setLoadedGoal] = useState<string | null>(null);
+  const [openedLatest, setOpenedLatest] = useState(false);
+
+  const goalLabel = (g: string | null) => {
+    switch (g) {
+      case "first-home": return beginnerMode ? "First home" : "First Home Buyer";
+      case "investment": return beginnerMode ? "Investment" : "Investment Property";
+      case "not-sure": return beginnerMode ? "Not sure yet" : "Exploring Options";
+      default: return "Property search";
+    }
+  };
 
   const labels = metricLabels(beginnerMode);
   const effectiveGoal = answers.goal ?? loadedGoal;
