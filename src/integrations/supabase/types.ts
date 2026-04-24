@@ -41,6 +41,114 @@ export type Database = {
         }
         Relationships: []
       }
+      match_alert_criteria: {
+        Row: {
+          active: boolean
+          beds_min: number | null
+          created_at: string
+          id: string
+          price_max: number | null
+          price_min: number | null
+          property_type: string | null
+          state: string | null
+          suburb: string | null
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          beds_min?: number | null
+          created_at?: string
+          id?: string
+          price_max?: number | null
+          price_min?: number | null
+          property_type?: string | null
+          state?: string | null
+          suburb?: string | null
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          beds_min?: number | null
+          created_at?: string
+          id?: string
+          price_max?: number | null
+          price_min?: number | null
+          property_type?: string | null
+          state?: string | null
+          suburb?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notification_preferences: {
+        Row: {
+          alert_frequency: string
+          created_at: string
+          email_enabled: boolean
+          inapp_enabled: boolean
+          phone_e164: string | null
+          sms_enabled: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          alert_frequency?: string
+          created_at?: string
+          email_enabled?: boolean
+          inapp_enabled?: boolean
+          phone_e164?: string | null
+          sms_enabled?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          alert_frequency?: string
+          created_at?: string
+          email_enabled?: boolean
+          inapp_enabled?: boolean
+          phone_e164?: string | null
+          sms_enabled?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          id: string
+          link: string | null
+          read_at: string | null
+          suburb_result_id: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          link?: string | null
+          read_at?: string | null
+          suburb_result_id?: string | null
+          title: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          link?: string | null
+          read_at?: string | null
+          suburb_result_id?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -70,39 +178,57 @@ export type Database = {
       }
       property_listings: {
         Row: {
-          address: string
+          address: string | null
           bathrooms: number | null
           bedrooms: number | null
+          bedrooms_min: number | null
           created_at: string
+          domain_url: string | null
           id: string
           image_url: string | null
           link: string | null
-          price: number
+          price: number | null
+          price_max: number | null
+          price_min: number | null
           property_type: string | null
+          realestate_url: string | null
+          search_label: string | null
           suburb_result_id: string
         }
         Insert: {
-          address: string
+          address?: string | null
           bathrooms?: number | null
           bedrooms?: number | null
+          bedrooms_min?: number | null
           created_at?: string
+          domain_url?: string | null
           id?: string
           image_url?: string | null
           link?: string | null
-          price: number
+          price?: number | null
+          price_max?: number | null
+          price_min?: number | null
           property_type?: string | null
+          realestate_url?: string | null
+          search_label?: string | null
           suburb_result_id: string
         }
         Update: {
-          address?: string
+          address?: string | null
           bathrooms?: number | null
           bedrooms?: number | null
+          bedrooms_min?: number | null
           created_at?: string
+          domain_url?: string | null
           id?: string
           image_url?: string | null
           link?: string | null
-          price?: number
+          price?: number | null
+          price_max?: number | null
+          price_min?: number | null
           property_type?: string | null
+          realestate_url?: string | null
+          search_label?: string | null
           suburb_result_id?: string
         }
         Relationships: [
@@ -262,14 +388,17 @@ export type Database = {
           days_on_market: number | null
           has_train_station: boolean | null
           house_weekly_rent: number | null
+          household_composition: string | null
           id: string
           infrastructure_projects: string | null
           match_score: number
+          median_age: number | null
           median_price: number | null
           nearest_hospital: string | null
           nearest_shopping_centre: string | null
           num_schools: number | null
           population_growth: number | null
+          population_total: number | null
           postcode: string | null
           quiz_submission_id: string
           reasoning: string | null
@@ -279,6 +408,7 @@ export type Database = {
           risk_level: string
           stamp_duty_estimate: number | null
           state: string
+          suburb_history: string | null
           suburb_name: string
           unit_weekly_rent: number | null
           vacancy_rate: number | null
@@ -293,14 +423,17 @@ export type Database = {
           days_on_market?: number | null
           has_train_station?: boolean | null
           house_weekly_rent?: number | null
+          household_composition?: string | null
           id?: string
           infrastructure_projects?: string | null
           match_score?: number
+          median_age?: number | null
           median_price?: number | null
           nearest_hospital?: string | null
           nearest_shopping_centre?: string | null
           num_schools?: number | null
           population_growth?: number | null
+          population_total?: number | null
           postcode?: string | null
           quiz_submission_id: string
           reasoning?: string | null
@@ -310,6 +443,7 @@ export type Database = {
           risk_level?: string
           stamp_duty_estimate?: number | null
           state: string
+          suburb_history?: string | null
           suburb_name: string
           unit_weekly_rent?: number | null
           vacancy_rate?: number | null
@@ -324,14 +458,17 @@ export type Database = {
           days_on_market?: number | null
           has_train_station?: boolean | null
           house_weekly_rent?: number | null
+          household_composition?: string | null
           id?: string
           infrastructure_projects?: string | null
           match_score?: number
+          median_age?: number | null
           median_price?: number | null
           nearest_hospital?: string | null
           nearest_shopping_centre?: string | null
           num_schools?: number | null
           population_growth?: number | null
+          population_total?: number | null
           postcode?: string | null
           quiz_submission_id?: string
           reasoning?: string | null
@@ -341,6 +478,7 @@ export type Database = {
           risk_level?: string
           stamp_duty_estimate?: number | null
           state?: string
+          suburb_history?: string | null
           suburb_name?: string
           unit_weekly_rent?: number | null
           vacancy_rate?: number | null
