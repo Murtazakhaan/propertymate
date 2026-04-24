@@ -92,6 +92,16 @@ const Results = () => {
   const [shortlisted, setShortlisted] = useState<Set<string>>(new Set());
   const [sortBy, setSortBy] = useState<SortOption>("match");
   const [loadedGoal, setLoadedGoal] = useState<string | null>(null);
+  const [openedLatest, setOpenedLatest] = useState(false);
+
+  const goalLabel = (g: string | null) => {
+    switch (g) {
+      case "first-home": return beginnerMode ? "First home" : "First Home Buyer";
+      case "investment": return beginnerMode ? "Investment" : "Investment Property";
+      case "not-sure": return beginnerMode ? "Not sure yet" : "Exploring Options";
+      default: return "Property search";
+    }
+  };
 
   const labels = metricLabels(beginnerMode);
   const effectiveGoal = answers.goal ?? loadedGoal;
@@ -161,7 +171,11 @@ const Results = () => {
         return;
       }
       await loadResultsForSubmission(subs[0].id, subs[0].goal);
-      toast({ title: "Opened latest match" });
+      setOpenedLatest(true);
+      toast({
+        title: "Opened latest match",
+        description: `Showing your most recent ${goalLabel(subs[0].goal)} search.`,
+      });
     } catch (e: any) {
       console.error("Load latest error:", e);
       setError(e?.message || "Could not load your saved results");
@@ -372,6 +386,22 @@ const Results = () => {
 
   return (
     <div className="container max-w-5xl py-8 md:py-16 px-4 sm:px-6">
+      {openedLatest && (
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary/20 bg-primary/5 px-4 py-3">
+          <div className="flex items-center gap-2 text-sm">
+            <Clock className="h-4 w-4 text-primary" />
+            <span className="text-foreground">
+              Opened your latest match for{" "}
+              <Badge variant="secondary" className="ml-1">{goalLabel(loadedGoal)}</Badge>
+            </span>
+          </div>
+          <Link to="/quiz">
+            <Button size="sm" variant="outline">
+              <RotateCcw className="mr-2 h-3 w-3" />Start a new search
+            </Button>
+          </Link>
+        </div>
+      )}
       <div className="text-center space-y-2 mb-6 md:mb-10">
         <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">{labels.topMatches}</h1>
         <p className="text-sm sm:text-base text-muted-foreground">{labels.topMatchesDesc}</p>
