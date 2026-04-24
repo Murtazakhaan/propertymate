@@ -156,6 +156,8 @@ const Results = () => {
   };
 
   const loadLatestSubmission = async () => {
+    // Guard: only run when no sid is present in the URL
+    if (searchParams.get("sid")) return;
     setLoading(true);
     setError(null);
     try {
@@ -170,12 +172,15 @@ const Results = () => {
         setError("no-quiz");
         return;
       }
-      await loadResultsForSubmission(subs[0].id, subs[0].goal);
-      setOpenedLatest(true);
-      toast({
-        title: "Opened latest match",
-        description: `Showing your most recent ${goalLabel(subs[0].goal)} search.`,
-      });
+      const ok = await loadResultsForSubmission(subs[0].id, subs[0].goal);
+      // Only toast when the fallback actually loaded results
+      if (ok) {
+        setOpenedLatest(true);
+        toast({
+          title: "Opened latest match",
+          description: `Showing your most recent ${goalLabel(subs[0].goal)} search.`,
+        });
+      }
     } catch (e: any) {
       console.error("Load latest error:", e);
       setError(e?.message || "Could not load your saved results");
@@ -184,7 +189,7 @@ const Results = () => {
     }
   };
 
-  const loadResultsForSubmission = async (submissionId: string, goal: string) => {
+  const loadResultsForSubmission = async (submissionId: string, goal: string): Promise<boolean> => {
     const { data: suburbs, error: sErr } = await supabase
       .from("suburb_results")
       .select("*")
@@ -193,7 +198,7 @@ const Results = () => {
     if (sErr) throw sErr;
     if (!suburbs || suburbs.length === 0) {
       setError("no-quiz");
-      return;
+      return false;
     }
     const ids = suburbs.map((s) => s.id);
     const { data: lst } = await supabase
@@ -203,6 +208,7 @@ const Results = () => {
     setResults(suburbs as SuburbResult[]);
     setListings((lst ?? []) as PropertyListing[]);
     setLoadedGoal(goal);
+    return true;
   };
 
   // Load existing shortlists
