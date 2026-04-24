@@ -58,10 +58,6 @@ const Index = () => {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--primary)/0.08),transparent_60%)]" />
         <div className="container relative py-16 sm:py-20 md:py-32">
           <div className="max-w-3xl mx-auto text-center space-y-6">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium animate-fade-in">
-              <Sparkles className="h-4 w-4" />
-              Your digital property strategist
-            </div>
             <h1 className="text-3xl sm:text-4xl md:text-6xl font-extrabold tracking-tight text-foreground animate-fade-in" style={{ animationDelay: "0.1s" }}>
               Skip the buyer's agent.{" "}
               <span className="bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent">Find your next property with data.</span>
