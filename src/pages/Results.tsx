@@ -17,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { metricLabels } from "@/lib/metric-labels";
+import SuburbReportButton from "@/components/SuburbReportButton";
 
 interface SuburbResult {
   id: string;
@@ -51,24 +52,28 @@ interface SuburbResult {
 interface PropertyListing {
   id: string;
   suburb_result_id: string;
-  address: string;
-  price: number;
+  address: string | null;
+  price: number | null;
+  price_min: number | null;
+  price_max: number | null;
   bedrooms: number | null;
   bathrooms: number | null;
   property_type: string | null;
   link: string | null;
   image_url: string | null;
+  realestate_url: string | null;
+  domain_url: string | null;
+  search_label: string | null;
 }
 
 type SortOption = "match" | "price-low" | "price-high" | "growth";
 
-const buildRealEstateUrl = (suburb: SuburbResult, budget: number | null) => {
-  const suburbSlug = suburb.suburb_name.toLowerCase().replace(/\s+/g, "-");
-  const stateMap: Record<string, string> = { NSW: "nsw", VIC: "vic", QLD: "qld", WA: "wa", SA: "sa", TAS: "tas", ACT: "act", NT: "nt" };
-  const stateSlug = stateMap[suburb.state] || suburb.state.toLowerCase();
-  let url = `https://www.realestate.com.au/buy/in-${suburbSlug},+${stateSlug}+${suburb.postcode ?? ""}/list-1`;
-  if (budget) url += `?maxPrice=${budget}`;
-  return url;
+const fmtPriceBand = (l: PropertyListing) => {
+  if (l.price_min != null && l.price_max != null) {
+    return `$${(l.price_min / 1000).toFixed(0)}k–$${(l.price_max / 1000).toFixed(0)}k`;
+  }
+  if (l.price != null) return `$${l.price.toLocaleString()}`;
+  return "Price on request";
 };
 
 const Results = () => {
