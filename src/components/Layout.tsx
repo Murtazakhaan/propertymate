@@ -6,6 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import NotificationBell from "@/components/NotificationBell";
+import ThemeToggle from "@/components/ThemeToggle";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -56,6 +57,7 @@ const Layout = ({ children, beginnerMode, onToggleBeginnerMode }: LayoutProps) =
                 {link.label}
               </Link>
             ))}
+            <ThemeToggle />
             {user ? (
               <div className="flex items-center gap-2">
                 <NotificationBell />
@@ -91,6 +93,7 @@ const Layout = ({ children, beginnerMode, onToggleBeginnerMode }: LayoutProps) =
                 Beginner
               </Label>
             </div>
+            <ThemeToggle className="h-8 w-8" />
             {user && <NotificationBell />}
             <button
               className="p-2"

@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppProvider, useApp } from "@/contexts/AppContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { QuizProvider } from "@/contexts/QuizContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Paywall from "@/components/Paywall";
 import Layout from "@/components/Layout";
@@ -48,15 +49,17 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <AuthProvider>
-        <AppProvider>
-          <QuizProvider>
-            <BrowserRouter>
-              <AppContent />
-            </BrowserRouter>
-          </QuizProvider>
-        </AppProvider>
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <AppProvider>
+            <QuizProvider>
+              <BrowserRouter>
+                <AppContent />
+              </BrowserRouter>
+            </QuizProvider>
+          </AppProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
