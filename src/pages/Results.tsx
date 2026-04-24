@@ -490,15 +490,43 @@ const Results = () => {
                     {showListings && (
                       <div className="mt-3 grid gap-2">
                         {suburbListings.map((listing) => (
-                          <div key={listing.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 text-sm">
-                            <div className="min-w-0">
-                              <p className="font-medium text-foreground truncate">{listing.address}</p>
-                              <p className="text-xs text-muted-foreground">
-                                {listing.property_type} · {listing.bedrooms} bed · {listing.bathrooms} bath
-                              </p>
+                          <div key={listing.id} className="p-3 rounded-lg bg-muted/30 text-sm space-y-2">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                <p className="font-medium text-foreground">
+                                  {listing.search_label ?? `${listing.bedrooms ?? "?"}-bed ${listing.property_type ?? ""}`}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {listing.property_type} · {listing.bedrooms ?? "?"} bed · {listing.bathrooms ?? "?"} bath
+                                </p>
+                              </div>
+                              <div className="text-right shrink-0">
+                                <p className="font-bold text-primary text-sm">{fmtPriceBand(listing)}</p>
+                              </div>
                             </div>
-                            <div className="text-right shrink-0 ml-3">
-                              <p className="font-bold text-primary">${listing.price.toLocaleString()}</p>
+                            <div className="flex flex-wrap gap-2">
+                              {listing.realestate_url && (
+                                <a
+                                  href={listing.realestate_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors"
+                                >
+                                  <ExternalLink className="h-3 w-3" />
+                                  realestate.com.au
+                                </a>
+                              )}
+                              {listing.domain_url && (
+                                <a
+                                  href={listing.domain_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors"
+                                >
+                                  <ExternalLink className="h-3 w-3" />
+                                  Domain
+                                </a>
+                              )}
                             </div>
                           </div>
                         ))}
@@ -507,17 +535,9 @@ const Results = () => {
                   </div>
                 )}
 
-                {/* Browse on realestate.com.au */}
-                <div className="border-t pt-3">
-                  <a
-                    href={buildRealEstateUrl(suburb, answers.budget)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                    {labels.browseListings}
-                  </a>
+                {/* Download report */}
+                <div className="border-t pt-3 flex flex-wrap gap-2">
+                  <SuburbReportButton suburbResultId={suburb.id} suburbName={suburb.suburb_name} />
                 </div>
               </CardContent>
             </Card>
