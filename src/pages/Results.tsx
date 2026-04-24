@@ -197,7 +197,6 @@ const Results = () => {
       setLoading(false);
     }
   };
-  };
 
   const loadLatestSubmission = async () => {
     // Guard: only run when no sid is present in the URL
