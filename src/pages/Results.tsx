@@ -131,6 +131,9 @@ const Results = () => {
       /* ignore quota errors */
     }
   };
+  const clearCache = () => {
+    try { localStorage.removeItem(cacheKey); } catch { /* ignore */ }
+  };
 
   useEffect(() => {
     // Priority 1: Deep-link with submission id (from notification)
@@ -148,7 +151,7 @@ const Results = () => {
     const cached = readCache();
     if (cached?.sid) {
       setLoadedGoal(cached.goal); // hydrate badge immediately
-      loadFromSubmission(cached.sid);
+      loadFromSubmission(cached.sid, { fromCache: true });
       return;
     }
     // Priority 4: Logged-in user → load most recent saved results
@@ -160,7 +163,10 @@ const Results = () => {
     setError("no-quiz");
   }, [user]);
 
-  const loadFromSubmission = async (submissionId: string) => {
+  const loadFromSubmission = async (
+    submissionId: string,
+    opts: { fromCache?: boolean } = {}
+  ) => {
     setLoading(true);
     setError(null);
     try {
@@ -171,10 +177,22 @@ const Results = () => {
         .maybeSingle();
       if (subErr) throw subErr;
       if (!sub) throw new Error("Submission not found");
-      await loadResultsForSubmission(sub.id, sub.goal);
+      const ok = await loadResultsForSubmission(sub.id, sub.goal);
+      if (!ok && opts.fromCache) throw new Error("Cached submission has no results");
     } catch (e: any) {
       console.error("Load submission error:", e);
-      setError(e?.message || "Could not load saved results");
+      // If the cached sid failed, drop it and fall back to the latest submission
+      if (opts.fromCache) {
+        clearCache();
+        setLoadedGoal(null);
+        if (user) {
+          await loadLatestSubmission();
+          return;
+        }
+        setError("no-quiz");
+      } else {
+        setError(e?.message || "Could not load saved results");
+      }
     } finally {
       setLoading(false);
     }
