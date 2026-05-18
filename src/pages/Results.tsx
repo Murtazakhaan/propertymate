@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { metricLabels } from "@/lib/metric-labels";
 import SuburbReportButton from "@/components/SuburbReportButton";
+import SuburbCard from "@/components/SuburbCard";
 
 interface SuburbResult {
   id: string;
@@ -83,6 +84,7 @@ const Results = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  
   const [results, setResults] = useState<SuburbResult[]>([]);
   const [listings, setListings] = useState<PropertyListing[]>([]);
   const [loading, setLoading] = useState(true);
@@ -93,6 +95,19 @@ const Results = () => {
   const [sortBy, setSortBy] = useState<SortOption>("match");
   const [loadedGoal, setLoadedGoal] = useState<string | null>(null);
   const [openedLatest, setOpenedLatest] = useState(false);
+
+  // Track pending requests to prevent race conditions
+  const pendingRequestRef = useRef<AbortController | null>(null);
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+      if (pendingRequestRef.current) {
+        pendingRequestRef.current.abort();
+      }
+    };
+  }, []);
 
   const goalLabel = (g: string | null) => {
     switch (g) {
@@ -114,7 +129,7 @@ const Results = () => {
     high: { color: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400", icon: Zap, label: labels.riskHigh },
   };
 
-  // Persist last loaded submission per user (or anon) so refresh keeps the goal
+  // Persist last loaded submission per user
   const cacheKey = `results:lastSubmission:${user?.id ?? "anon"}`;
   const readCache = (): { sid: string; goal: string } | null => {
     try {
@@ -135,38 +150,18 @@ const Results = () => {
     try { localStorage.removeItem(cacheKey); } catch { /* ignore */ }
   };
 
-  useEffect(() => {
-    // Priority 1: Deep-link with submission id (from notification)
-    const sid = searchParams.get("sid");
-    if (sid) {
-      loadFromSubmission(sid);
-      return;
-    }
-    // Priority 2: Fresh quiz answers in memory → run analysis
-    if (answers.goal && answers.timeline) {
-      fetchResults();
-      return;
-    }
-    // Priority 3: Cached submission from a previous visit (survives refresh)
-    const cached = readCache();
-    if (cached?.sid) {
-      setLoadedGoal(cached.goal); // hydrate badge immediately
-      loadFromSubmission(cached.sid, { fromCache: true });
-      return;
-    }
-    // Priority 4: Logged-in user → load most recent saved results
-    if (user) {
-      loadLatestSubmission();
-      return;
-    }
-    setLoading(false);
-    setError("no-quiz");
-  }, [user]);
-
-  const loadFromSubmission = async (
+  const loadFromSubmission = useCallback(async (
     submissionId: string,
     opts: { fromCache?: boolean } = {}
   ) => {
+    if (!isMountedRef.current) return;
+    
+    // Cancel previous request
+    if (pendingRequestRef.current) {
+      pendingRequestRef.current.abort();
+    }
+    pendingRequestRef.current = new AbortController();
+
     setLoading(true);
     setError(null);
     try {
@@ -175,34 +170,45 @@ const Results = () => {
         .select("id, goal")
         .eq("id", submissionId)
         .maybeSingle();
+      
       if (subErr) throw subErr;
       if (!sub) throw new Error("Submission not found");
+      
       const ok = await loadResultsForSubmission(sub.id, sub.goal);
       if (!ok && opts.fromCache) throw new Error("Cached submission has no results");
     } catch (e: any) {
+      if (e.name === 'AbortError') return; // Request was cancelled
+      
       console.error("Load submission error:", e);
-      // If the cached sid failed, drop it and fall back to the latest submission
       if (opts.fromCache) {
         clearCache();
         setLoadedGoal(null);
-        if (user) {
+        if (user && isMountedRef.current) {
           await loadLatestSubmission();
           return;
         }
-        setError("no-quiz");
+        if (isMountedRef.current) {
+          setError("no-quiz");
+        }
       } else {
-        setError(e?.message || "Could not load saved results");
+        if (isMountedRef.current) {
+          setError(e?.message || "Could not load saved results");
+        }
       }
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
     }
-  };
+  }, [user]);
 
-  const loadLatestSubmission = async () => {
-    // Guard: only run when no sid is present in the URL
+  const loadLatestSubmission = useCallback(async () => {
     if (searchParams.get("sid")) return;
+    
+    if (!isMountedRef.current) return;
     setLoading(true);
     setError(null);
+    
     try {
       const { data: subs, error: subErr } = await supabase
         .from("quiz_submissions")
@@ -210,14 +216,17 @@ const Results = () => {
         .eq("user_id", user!.id)
         .order("created_at", { ascending: false })
         .limit(1);
+      
       if (subErr) throw subErr;
       if (!subs || subs.length === 0) {
-        setError("no-quiz");
+        if (isMountedRef.current) {
+          setError("no-quiz");
+        }
         return;
       }
+      
       const ok = await loadResultsForSubmission(subs[0].id, subs[0].goal);
-      // Only toast when the fallback actually loaded results
-      if (ok) {
+      if (ok && isMountedRef.current) {
         setOpenedLatest(true);
         toast({
           title: "Opened latest match",
@@ -226,51 +235,97 @@ const Results = () => {
       }
     } catch (e: any) {
       console.error("Load latest error:", e);
-      setError(e?.message || "Could not load your saved results");
+      if (isMountedRef.current) {
+        setError(e?.message || "Could not load your saved results");
+      }
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
     }
-  };
+  }, [user, searchParams, toast]);
 
-  const loadResultsForSubmission = async (submissionId: string, goal: string): Promise<boolean> => {
+  const loadResultsForSubmission = useCallback(async (submissionId: string, goal: string): Promise<boolean> => {
     const { data: suburbs, error: sErr } = await supabase
       .from("suburb_results")
       .select("*")
       .eq("quiz_submission_id", submissionId)
       .order("match_score", { ascending: false });
+    
     if (sErr) throw sErr;
     if (!suburbs || suburbs.length === 0) {
-      setError("no-quiz");
+      if (isMountedRef.current) {
+        setError("no-quiz");
+      }
       return false;
     }
+
+    // Optimized: Fetch all listings in single query with suburb IDs
     const ids = suburbs.map((s) => s.id);
-    const { data: lst } = await supabase
+    const { data: lst, error: lErr } = await supabase
       .from("property_listings")
       .select("*")
       .in("suburb_result_id", ids);
-    setResults(suburbs as SuburbResult[]);
-    setListings((lst ?? []) as PropertyListing[]);
-    setLoadedGoal(goal);
-    writeCache(submissionId, goal);
+    
+    if (lErr) {
+      console.error("Error loading listings:", lErr);
+    }
+
+    if (isMountedRef.current) {
+      setResults(suburbs as SuburbResult[]);
+      setListings((lst ?? []) as PropertyListing[]);
+      setLoadedGoal(goal);
+      writeCache(submissionId, goal);
+    }
+    
     return true;
-  };
+  }, []);
 
   // Load existing shortlists
   useEffect(() => {
     if (!user) return;
+    
     const loadShortlists = async () => {
       const { data } = await supabase
         .from("shortlists")
         .select("suburb_result_id")
         .eq("user_id", user.id);
-      if (data) {
+      
+      if (data && isMountedRef.current) {
         setShortlisted(new Set(data.map((s) => s.suburb_result_id)));
       }
     };
+    
     loadShortlists();
   }, [user]);
 
-  const fetchResults = async () => {
+  // Priority-based loading with race condition prevention
+  useEffect(() => {
+    const sid = searchParams.get("sid");
+    
+    if (sid) {
+      loadFromSubmission(sid);
+    } else if (answers.goal && answers.timeline) {
+      fetchResults();
+    } else {
+      const cached = readCache();
+      if (cached?.sid) {
+        setLoadedGoal(cached.goal);
+        loadFromSubmission(cached.sid, { fromCache: true });
+      } else if (user) {
+        loadLatestSubmission();
+      } else {
+        if (isMountedRef.current) {
+          setLoading(false);
+          setError("no-quiz");
+        }
+      }
+    }
+  }, [user]); // Only depend on user to prevent race conditions
+
+  const fetchResults = useCallback(async () => {
+    if (!isMountedRef.current) return;
+    
     setLoading(true);
     setError(null);
 
@@ -299,17 +354,36 @@ const Results = () => {
       if (fnError) throw fnError;
       if (data?.error) throw new Error(data.error);
 
-      setResults(data.results ?? []);
-      setListings(data.listings ?? []);
+      if (isMountedRef.current) {
+        setResults(data.results ?? []);
+        setListings(data.listings ?? []);
+      }
     } catch (e: any) {
       console.error("Results error:", e);
       const msg = e?.message || "Failed to analyze suburbs";
-      setError(msg);
-      toast({ title: "Analysis failed", description: msg, variant: "destructive" });
+      if (isMountedRef.current) {
+        setError(msg);
+        toast({ title: "Analysis failed", description: msg, variant: "destructive" });
+      }
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) {
+        setLoading(false);
+      }
     }
-  };
+  }, [answers, toast]);
+
+  // Pre-index listings by suburb (fixes O(n²) filtering)
+  const listingsBySuburb = useMemo(() => {
+    const map = new Map<string, PropertyListing[]>();
+    listings.forEach(listing => {
+      const suburbId = listing.suburb_result_id;
+      if (!map.has(suburbId)) {
+        map.set(suburbId, []);
+      }
+      map.get(suburbId)!.push(listing);
+    });
+    return map;
+  }, [listings]);
 
   const toggleSelect = (id: string) => {
     setSelected((prev) => {
@@ -327,7 +401,7 @@ const Results = () => {
     });
   };
 
-  const toggleShortlist = async (suburbId: string) => {
+  const toggleShortlist = useCallback(async (suburbId: string) => {
     if (!user) {
       toast({ title: "Sign in required", description: "Please sign in to save suburbs." });
       return;
@@ -346,7 +420,7 @@ const Results = () => {
       setShortlisted((prev) => new Set(prev).add(suburbId));
       toast({ title: "Added to shortlist" });
     }
-  };
+  }, [user, shortlisted, toast]);
 
   const toggleListings = (id: string) => {
     setExpandedListings((prev) => {
@@ -361,21 +435,21 @@ const Results = () => {
     navigate("/compare", { state: { suburbs, goal: answers.goal } });
   };
 
-  const getListingsForSuburb = (suburbId: string) =>
-    listings.filter((l) => l.suburb_result_id === suburbId);
-
-  const sortedResults = [...results].sort((a, b) => {
-    switch (sortBy) {
-      case "price-low":
-        return (a.median_price ?? Infinity) - (b.median_price ?? Infinity);
-      case "price-high":
-        return (b.median_price ?? 0) - (a.median_price ?? 0);
-      case "growth":
-        return (b.capital_growth_rate ?? 0) - (a.capital_growth_rate ?? 0);
-      default:
-        return b.match_score - a.match_score;
-    }
-  });
+  // Memoized sorted results (fixes repeated sorting)
+  const sortedResults = useMemo(() => {
+    return [...results].sort((a, b) => {
+      switch (sortBy) {
+        case "price-low":
+          return (a.median_price ?? Infinity) - (b.median_price ?? Infinity);
+        case "price-high":
+          return (b.median_price ?? 0) - (a.median_price ?? 0);
+        case "growth":
+          return (b.capital_growth_rate ?? 0) - (a.capital_growth_rate ?? 0);
+        default:
+          return b.match_score - a.match_score;
+      }
+    });
+  }, [results, sortBy]);
 
   if (loading) {
     return (
@@ -394,7 +468,6 @@ const Results = () => {
                 : "Crunching market data to find your best matches. This usually takes 10 to 20 seconds."}
             </p>
           </div>
-          {/* Progress dots */}
           <div className="flex justify-center gap-2">
             {[0, 1, 2].map((i) => (
               <div
@@ -457,7 +530,6 @@ const Results = () => {
         <p className="text-sm sm:text-base text-muted-foreground">{labels.topMatchesDesc}</p>
       </div>
 
-      {/* Sort & compare bar */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
         <div className="flex items-center gap-2 flex-wrap">
           <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
@@ -492,223 +564,25 @@ const Results = () => {
       )}
 
       <div className="grid gap-4 md:gap-6">
-        {sortedResults.map((suburb, index) => {
-          const risk = riskConfig[suburb.risk_level as keyof typeof riskConfig] ?? riskConfig.medium;
-          const RiskIcon = risk.icon;
-          const isSelected = selected.has(suburb.id);
-          const isBookmarked = shortlisted.has(suburb.id);
-          const suburbListings = getListingsForSuburb(suburb.id);
-          const showListings = expandedListings.has(suburb.id);
-
-          return (
-            <Card
-              key={suburb.id}
-              className={cn(
-                "overflow-hidden transition-all duration-200",
-                isSelected && "ring-2 ring-primary shadow-lg shadow-primary/10"
-              )}
-            >
-              <CardHeader className="pb-3 px-4 sm:px-6">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-start gap-2 sm:gap-3 min-w-0">
-                    <Checkbox
-                      checked={isSelected}
-                      onCheckedChange={() => toggleSelect(suburb.id)}
-                      className="mt-1.5 shrink-0"
-                      aria-label={`Select ${suburb.suburb_name} for comparison`}
-                    />
-                    <div className={cn(
-                      "hidden sm:flex items-center justify-center w-10 h-10 rounded-full font-bold text-lg shrink-0",
-                      index === 0 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                    )}>
-                      {index + 1}
-                    </div>
-                    <div className="min-w-0">
-                      <CardTitle className="text-base sm:text-xl flex items-center gap-1 flex-wrap">
-                        <MapPin className="inline h-4 w-4 text-primary shrink-0" />
-                        <span className="truncate">{suburb.suburb_name}, {suburb.state} {suburb.postcode ?? ""}</span>
-                      </CardTitle>
-                      <div className="flex items-center gap-2 mt-1 flex-wrap">
-                        {suburb.best_for_tag && (
-                          <Badge variant="secondary" className="text-xs">{suburb.best_for_tag}</Badge>
-                        )}
-                        {!isOwnerOccupier && (
-                          <Badge className={cn("text-xs", risk.color)}>
-                            <RiskIcon className="h-3 w-3 mr-1" />{risk.label}
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-2 shrink-0">
-                    <button
-                      onClick={() => toggleShortlist(suburb.id)}
-                      className={cn(
-                        "p-1.5 rounded-md transition-colors",
-                        isBookmarked ? "text-primary" : "text-muted-foreground hover:text-primary"
-                      )}
-                      aria-label={isBookmarked ? "Remove from shortlist" : "Add to shortlist"}
-                    >
-                      {isBookmarked ? <BookmarkCheck className="h-5 w-5" /> : <Bookmark className="h-5 w-5" />}
-                    </button>
-                    <div className="text-right">
-                      <div className="text-2xl sm:text-3xl font-bold text-primary">{suburb.match_score}%</div>
-                      <div className="text-xs text-muted-foreground">
-                        {beginnerMode ? "Fit" : "Match"}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4 px-4 sm:px-6">
-                {/* Key metrics */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4">
-                  {suburb.median_price != null && (
-                    <MetricCard icon={Home} label={labels.medianPrice} value={`$${(suburb.median_price / 1000).toFixed(0)}k`} />
-                  )}
-                  {suburb.capital_growth_rate != null && (
-                    <MetricCard icon={TrendingUp} label={labels.capitalGrowth} value={`${suburb.capital_growth_rate}%`} />
-                  )}
-                  {suburb.population_growth != null && (
-                    <MetricCard icon={TrendingUp} label={labels.populationGrowth} value={`${suburb.population_growth}%`} />
-                  )}
-                  {suburb.stamp_duty_estimate != null && (
-                    <MetricCard icon={Building2} label={labels.stampDuty} value={`$${(suburb.stamp_duty_estimate / 1000).toFixed(0)}k`} />
-                  )}
-                  {isInvestor && suburb.rental_yield != null && (
-                    <MetricCard icon={TrendingUp} label={labels.rentalYield} value={`${suburb.rental_yield}%`} />
-                  )}
-                  {isInvestor && suburb.vacancy_rate != null && (
-                    <MetricCard icon={AlertTriangle} label={labels.vacancyRate} value={`${suburb.vacancy_rate}%`} />
-                  )}
-                </div>
-
-                {/* Owner occupier: amenities */}
-                {isOwnerOccupier && (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    {suburb.nearest_hospital && (
-                      <AmenityItem icon={Hospital} label={labels.nearestHospital} value={suburb.nearest_hospital} />
-                    )}
-                    {suburb.num_schools != null && (
-                      <AmenityItem icon={GraduationCap} label={labels.numSchools} value={`${suburb.num_schools}`} />
-                    )}
-                    {suburb.has_train_station != null && (
-                      <AmenityItem icon={Train} label={labels.trainStation} value={suburb.has_train_station ? "Yes" : "No"} />
-                    )}
-                    {suburb.crime_rate_level && (
-                      <AmenityItem icon={ShieldCheck} label={labels.crimeRate} value={suburb.crime_rate_level} />
-                    )}
-                    {suburb.nearest_shopping_centre && (
-                      <AmenityItem icon={ShoppingBag} label={labels.shoppingCentre} value={suburb.nearest_shopping_centre} />
-                    )}
-                  </div>
-                )}
-
-                {/* Investor: infrastructure projects */}
-                {isInvestor && suburb.infrastructure_projects && (
-                  <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/50 text-sm">
-                    <Wrench className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                    <div>
-                      <span className="font-medium text-foreground">{labels.infrastructureProjects}: </span>
-                      <span className="text-muted-foreground">{suburb.infrastructure_projects}</span>
-                    </div>
-                  </div>
-                )}
-
-                {/* Investor: house vs unit rental breakdown */}
-                {isInvestor && (suburb.house_weekly_rent != null || suburb.unit_weekly_rent != null) && (
-                  <div className="grid grid-cols-2 gap-3">
-                    {suburb.house_weekly_rent != null && (
-                      <MetricCard icon={Home} label={labels.houseRentalReturn} value={`$${suburb.house_weekly_rent}/wk`} />
-                    )}
-                    {suburb.unit_weekly_rent != null && (
-                      <MetricCard icon={Building2} label={labels.unitRentalReturn} value={`$${suburb.unit_weekly_rent}/wk`} />
-                    )}
-                  </div>
-                )}
-
-                {/* Investor rental info */}
-                {isInvestor && (suburb.rental_range_low != null || suburb.weekly_out_of_pocket != null) && (
-                  <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                    {suburb.rental_range_low != null && suburb.rental_range_high != null && (
-                      <span>{labels.weeklyRent}: ${suburb.rental_range_low}-${suburb.rental_range_high}</span>
-                    )}
-                    {suburb.weekly_out_of_pocket != null && (
-                      <span>{labels.estOutOfPocket}: ${suburb.weekly_out_of_pocket}/wk</span>
-                    )}
-                  </div>
-                )}
-
-                {suburb.reasoning && (
-                  <p className="text-sm text-muted-foreground border-t pt-3">{suburb.reasoning}</p>
-                )}
-
-                {/* Property listings */}
-                {suburbListings.length > 0 && (
-                  <div className="border-t pt-3">
-                    <button
-                      className="text-sm font-medium text-primary hover:underline flex items-center gap-1"
-                      onClick={() => toggleListings(suburb.id)}
-                    >
-                      <Building2 className="h-4 w-4" />
-                      {showListings ? "Hide" : "View"} {suburbListings.length} property picks
-                    </button>
-                    {showListings && (
-                      <div className="mt-3 grid gap-2">
-                        {suburbListings.map((listing) => (
-                          <div key={listing.id} className="p-3 rounded-lg bg-muted/30 text-sm space-y-2">
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="min-w-0">
-                                <p className="font-medium text-foreground">
-                                  {listing.search_label ?? `${listing.bedrooms ?? "?"}-bed ${listing.property_type ?? ""}`}
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                  {listing.property_type} · {listing.bedrooms ?? "?"} bed · {listing.bathrooms ?? "?"} bath
-                                </p>
-                              </div>
-                              <div className="text-right shrink-0">
-                                <p className="font-bold text-primary text-sm">{fmtPriceBand(listing)}</p>
-                              </div>
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                              {listing.realestate_url && (
-                                <a
-                                  href={listing.realestate_url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors"
-                                >
-                                  <ExternalLink className="h-3 w-3" />
-                                  realestate.com.au
-                                </a>
-                              )}
-                              {listing.domain_url && (
-                                <a
-                                  href={listing.domain_url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors"
-                                >
-                                  <ExternalLink className="h-3 w-3" />
-                                  Domain
-                                </a>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Download report */}
-                <div className="border-t pt-3 flex flex-wrap gap-2">
-                  <SuburbReportButton suburbResultId={suburb.id} suburbName={suburb.suburb_name} />
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+        {sortedResults.map((suburb, index) => (
+          <SuburbCard
+            key={suburb.id}
+            suburb={suburb}
+            index={index}
+            isSelected={selected.has(suburb.id)}
+            isBookmarked={shortlisted.has(suburb.id)}
+            isExpanded={expandedListings.has(suburb.id)}
+            listings={listingsBySuburb.get(suburb.id) || []}
+            riskConfig={riskConfig}
+            isOwnerOccupier={isOwnerOccupier}
+            isInvestor={isInvestor}
+            beginnerMode={beginnerMode}
+            labels={labels}
+            onSelectChange={() => toggleSelect(suburb.id)}
+            onBookmarkChange={() => toggleShortlist(suburb.id)}
+            onExpandListings={() => toggleListings(suburb.id)}
+          />
+        ))}
       </div>
 
       <div className="flex justify-center gap-3 mt-8 md:mt-10">
@@ -721,23 +595,5 @@ const Results = () => {
     </div>
   );
 };
-
-const MetricCard = ({ icon: Icon, label, value }: { icon: any; label: string; value: string }) => (
-  <div className="bg-muted/50 rounded-lg p-3 text-center">
-    <Icon className="h-4 w-4 mx-auto text-muted-foreground mb-1" />
-    <div className="font-semibold text-foreground text-sm sm:text-base">{value}</div>
-    <div className="text-[11px] sm:text-xs text-muted-foreground leading-tight">{label}</div>
-  </div>
-);
-
-const AmenityItem = ({ icon: Icon, label, value }: { icon: any; label: string; value: string }) => (
-  <div className="flex items-center gap-2 text-sm p-2 rounded-lg bg-muted/30">
-    <Icon className="h-4 w-4 text-primary shrink-0" />
-    <div className="min-w-0">
-      <div className="text-xs text-muted-foreground">{label}</div>
-      <div className="font-medium text-foreground capitalize truncate">{value}</div>
-    </div>
-  </div>
-);
 
 export default Results;
