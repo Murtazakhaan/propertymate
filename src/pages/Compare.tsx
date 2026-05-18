@@ -2,6 +2,7 @@ import { useLocation, Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useMemo } from "react";
 import {
   ArrowLeft, MapPin, Shield, AlertTriangle, Zap, TrendingUp, Home,
   Clock, Users, BarChart3, Hospital, GraduationCap, Train, ShieldCheck,
@@ -45,6 +46,19 @@ const formatNum = (v: number | null) => (v != null ? `${v}` : "-");
 const formatDollar = (v: number | null) => (v != null ? `$${v}` : "-");
 const formatBool = (v: boolean | null) => (v === true ? "Yes" : v === false ? "No" : "-");
 
+// Memoized utility to find best index (fixes duplicate calculations)
+const findBestIndex = (values: (number | null)[], highlight?: "highest" | "lowest"): number => {
+  const filtered = values
+    .map((v, i) => (v != null ? { v, i } : null))
+    .filter((x): x is { v: number; i: number } => x !== null);
+  
+  if (filtered.length === 0) return -1;
+  
+  return highlight === "highest"
+    ? filtered.reduce((a, b) => (b.v > a.v ? b : a)).i
+    : filtered.reduce((a, b) => (b.v < a.v ? b : a)).i;
+};
+
 interface MetricRowProps {
   label: string;
   icon: React.ElementType;
@@ -54,15 +68,11 @@ interface MetricRowProps {
 }
 
 const MetricRow = ({ label, icon: Icon, values, highlight, rawValues }: MetricRowProps) => {
-  let bestIdx = -1;
-  if (highlight && rawValues) {
-    const filtered = rawValues.map((v, i) => (v != null ? { v, i } : null)).filter(Boolean) as { v: number; i: number }[];
-    if (filtered.length > 0) {
-      bestIdx = highlight === "highest"
-        ? filtered.reduce((a, b) => (b.v > a.v ? b : a)).i
-        : filtered.reduce((a, b) => (b.v < a.v ? b : a)).i;
-    }
-  }
+  // Memoized best index calculation
+  const bestIdx = useMemo(
+    () => (highlight && rawValues ? findBestIndex(rawValues, highlight) : -1),
+    [highlight, rawValues]
+  );
 
   return (
     <tr className="border-b border-border/50 last:border-0">
@@ -95,15 +105,11 @@ const MobileMetricCard = ({
   highlight,
   rawValues,
 }: MetricRowProps & { suburbs: SuburbResult[] }) => {
-  let bestIdx = -1;
-  if (highlight && rawValues) {
-    const filtered = rawValues.map((v, i) => (v != null ? { v, i } : null)).filter(Boolean) as { v: number; i: number }[];
-    if (filtered.length > 0) {
-      bestIdx = highlight === "highest"
-        ? filtered.reduce((a, b) => (b.v > a.v ? b : a)).i
-        : filtered.reduce((a, b) => (b.v < a.v ? b : a)).i;
-    }
-  }
+  // Memoized best index calculation (eliminates duplication)
+  const bestIdx = useMemo(
+    () => (highlight && rawValues ? findBestIndex(rawValues, highlight) : -1),
+    [highlight, rawValues]
+  );
 
   return (
     <div className="bg-muted/30 rounded-lg p-3">
@@ -144,6 +150,35 @@ const Compare = () => {
     high: { color: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400", icon: Zap, label: labels.riskHigh },
   };
 
+  // Memoized metric arrays (prevents re-creating on every render)
+  const allMetrics = useMemo(() => {
+    const commonMetrics = [
+      { label: labels.medianPrice, icon: Home, values: suburbs.map((s) => formatPrice(s.median_price)), highlight: "lowest" as const, rawValues: suburbs.map((s) => s.median_price) },
+      { label: labels.capitalGrowth, icon: TrendingUp, values: suburbs.map((s) => formatPct(s.capital_growth_rate)), highlight: "highest" as const, rawValues: suburbs.map((s) => s.capital_growth_rate) },
+      { label: labels.populationGrowth, icon: Users, values: suburbs.map((s) => formatPct(s.population_growth)), highlight: "highest" as const, rawValues: suburbs.map((s) => s.population_growth) },
+    ];
+
+    const ownerMetrics = isOwnerOccupier ? [
+      { label: labels.stampDuty, icon: Building2, values: suburbs.map((s) => formatPrice(s.stamp_duty_estimate)), highlight: "lowest" as const, rawValues: suburbs.map((s) => s.stamp_duty_estimate) },
+      { label: labels.nearestHospital, icon: Hospital, values: suburbs.map((s) => s.nearest_hospital ?? "-") },
+      { label: labels.numSchools, icon: GraduationCap, values: suburbs.map((s) => formatNum(s.num_schools)), highlight: "highest" as const, rawValues: suburbs.map((s) => s.num_schools) },
+      { label: labels.trainStation, icon: Train, values: suburbs.map((s) => formatBool(s.has_train_station)) },
+      { label: labels.crimeRate, icon: ShieldCheck, values: suburbs.map((s) => s.crime_rate_level ? s.crime_rate_level.charAt(0).toUpperCase() + s.crime_rate_level.slice(1) : "-") },
+      { label: labels.shoppingCentre, icon: ShoppingBag, values: suburbs.map((s) => s.nearest_shopping_centre ?? "-") },
+    ] : [];
+
+    const investorMetrics = isInvestor ? [
+      { label: labels.rentalYield, icon: TrendingUp, values: suburbs.map((s) => formatPct(s.rental_yield)), highlight: "highest" as const, rawValues: suburbs.map((s) => s.rental_yield) },
+      { label: labels.vacancyRate, icon: AlertTriangle, values: suburbs.map((s) => formatPct(s.vacancy_rate)), highlight: "lowest" as const, rawValues: suburbs.map((s) => s.vacancy_rate) },
+      { label: labels.daysOnMarket, icon: Clock, values: suburbs.map((s) => formatNum(s.days_on_market)), highlight: "lowest" as const, rawValues: suburbs.map((s) => s.days_on_market) },
+      { label: labels.weeklyRentLow, icon: Home, values: suburbs.map((s) => formatDollar(s.rental_range_low)) },
+      { label: labels.weeklyRentHigh, icon: Home, values: suburbs.map((s) => formatDollar(s.rental_range_high)) },
+      { label: labels.outOfPocket, icon: TrendingUp, values: suburbs.map((s) => formatDollar(s.weekly_out_of_pocket)), highlight: "lowest" as const, rawValues: suburbs.map((s) => s.weekly_out_of_pocket) },
+    ] : [];
+
+    return [...commonMetrics, ...ownerMetrics, ...investorMetrics];
+  }, [suburbs, isOwnerOccupier, isInvestor, labels]);
+
   if (suburbs.length < 2) {
     return (
       <div className="container max-w-4xl py-10 md:py-16 text-center space-y-6">
@@ -155,33 +190,6 @@ const Compare = () => {
       </div>
     );
   }
-
-  // Common metrics for both views
-  const commonMetrics = [
-    { label: labels.medianPrice, icon: Home, values: suburbs.map((s) => formatPrice(s.median_price)), highlight: "lowest" as const, rawValues: suburbs.map((s) => s.median_price) },
-    { label: labels.capitalGrowth, icon: TrendingUp, values: suburbs.map((s) => formatPct(s.capital_growth_rate)), highlight: "highest" as const, rawValues: suburbs.map((s) => s.capital_growth_rate) },
-    { label: labels.populationGrowth, icon: Users, values: suburbs.map((s) => formatPct(s.population_growth)), highlight: "highest" as const, rawValues: suburbs.map((s) => s.population_growth) },
-  ];
-
-  const ownerMetrics = isOwnerOccupier ? [
-    { label: labels.stampDuty, icon: Building2, values: suburbs.map((s) => formatPrice(s.stamp_duty_estimate)), highlight: "lowest" as const, rawValues: suburbs.map((s) => s.stamp_duty_estimate) },
-    { label: labels.nearestHospital, icon: Hospital, values: suburbs.map((s) => s.nearest_hospital ?? "-") },
-    { label: labels.numSchools, icon: GraduationCap, values: suburbs.map((s) => formatNum(s.num_schools)), highlight: "highest" as const, rawValues: suburbs.map((s) => s.num_schools) },
-    { label: labels.trainStation, icon: Train, values: suburbs.map((s) => formatBool(s.has_train_station)) },
-    { label: labels.crimeRate, icon: ShieldCheck, values: suburbs.map((s) => s.crime_rate_level ? s.crime_rate_level.charAt(0).toUpperCase() + s.crime_rate_level.slice(1) : "-") },
-    { label: labels.shoppingCentre, icon: ShoppingBag, values: suburbs.map((s) => s.nearest_shopping_centre ?? "-") },
-  ] : [];
-
-  const investorMetrics = isInvestor ? [
-    { label: labels.rentalYield, icon: TrendingUp, values: suburbs.map((s) => formatPct(s.rental_yield)), highlight: "highest" as const, rawValues: suburbs.map((s) => s.rental_yield) },
-    { label: labels.vacancyRate, icon: AlertTriangle, values: suburbs.map((s) => formatPct(s.vacancy_rate)), highlight: "lowest" as const, rawValues: suburbs.map((s) => s.vacancy_rate) },
-    { label: labels.daysOnMarket, icon: Clock, values: suburbs.map((s) => formatNum(s.days_on_market)), highlight: "lowest" as const, rawValues: suburbs.map((s) => s.days_on_market) },
-    { label: labels.weeklyRentLow, icon: Home, values: suburbs.map((s) => formatDollar(s.rental_range_low)) },
-    { label: labels.weeklyRentHigh, icon: Home, values: suburbs.map((s) => formatDollar(s.rental_range_high)) },
-    { label: labels.outOfPocket, icon: TrendingUp, values: suburbs.map((s) => formatDollar(s.weekly_out_of_pocket)), highlight: "lowest" as const, rawValues: suburbs.map((s) => s.weekly_out_of_pocket) },
-  ] : [];
-
-  const allMetrics = [...commonMetrics, ...ownerMetrics, ...investorMetrics];
 
   return (
     <div className="container max-w-6xl py-8 md:py-16 px-4 sm:px-6">
