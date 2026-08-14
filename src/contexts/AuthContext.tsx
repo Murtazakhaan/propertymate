@@ -69,10 +69,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   return (
     <AuthContext.Provider value={{
       session, user, loading,
-      subscribed, subscriptionEnd, cancelAtPeriodEnd, subscriptionStatus,
-      checkingSubscription,
       signUp, signIn, signInWithGoogle, signOut,
-      refreshSubscription: checkSubscription,
+
     }}>
       {children}
     </AuthContext.Provider>
