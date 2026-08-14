@@ -7,8 +7,7 @@ import { AppProvider, useApp } from "@/contexts/AppContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { QuizProvider } from "@/contexts/QuizContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
-import ProtectedRoute from "@/components/ProtectedRoute";
-import Paywall from "@/components/Paywall";
+import RequireAuth from "@/components/RequireAuth";
 import Layout from "@/components/Layout";
 import Index from "./pages/Index";
 import Quiz from "./pages/Quiz";
@@ -18,7 +17,6 @@ import Glossary from "./pages/Glossary";
 import Compare from "./pages/Compare";
 import Login from "./pages/Login";
 import Account from "./pages/Account";
-import Pricing from "./pages/Pricing";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,14 +28,15 @@ const AppContent = () => {
     <Layout beginnerMode={beginnerMode} onToggleBeginnerMode={toggleBeginnerMode}>
       <Routes>
         <Route path="/" element={<Index />} />
-        <Route path="/quiz" element={<ProtectedRoute><Paywall><Quiz /></Paywall></ProtectedRoute>} />
-        <Route path="/results" element={<ProtectedRoute><Paywall><Results /></Paywall></ProtectedRoute>} />
-        <Route path="/compare" element={<ProtectedRoute><Paywall><Compare /></Paywall></ProtectedRoute>} />
+        <Route path="/quiz" element={<Quiz />} />
+        <Route path="/results" element={<Results />} />
+        <Route path="/compare" element={<Compare />} />
         <Route path="/about" element={<About />} />
         <Route path="/glossary" element={<Glossary />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
-        <Route path="/pricing" element={<Pricing />} />
+        <Route path="/account" element={<RequireAuth><Account /></RequireAuth>} />
+        <Route path="*" element={<NotFound />} />
+
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Layout>
