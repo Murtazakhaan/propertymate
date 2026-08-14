@@ -62,66 +62,8 @@ const Account = () => {
         </CardContent>
       </Card>
 
-      {/* Subscription card */}
-      <Card className={subscribed ? "border-primary/40 shadow-md shadow-primary/5" : ""}>
-        <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Crown className="h-5 w-5 text-primary" />
-              </div>
-              <CardTitle className="text-lg">Subscription</CardTitle>
-            </div>
-            {statusInfo && (
-              <Badge variant={statusInfo.variant} className="flex items-center gap-1">
-                <Crown className="h-3 w-3" />
-                {statusInfo.label}
-              </Badge>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {subscribed || subscriptionStatus === "past_due" ? (
-            <>
-              <div className="rounded-lg bg-gradient-to-r from-primary/10 to-primary/5 p-4 space-y-1">
-                <div className="flex items-center justify-between">
-                  <p className="font-semibold text-primary text-lg">PropertyMate Pro</p>
-                  {subscriptionEnd && (
-                    <p className="text-xs text-muted-foreground">{dateLabel}</p>
-                  )}
-                </div>
-                {subscriptionStatus === "past_due" && (
-                  <p className="text-xs text-destructive font-medium mt-1">
-                    ⚠️ Payment failed — please update your payment method
-                  </p>
-                )}
-              </div>
-              <div className="flex flex-col sm:flex-row gap-2">
-                <Button variant="outline" className="flex-1" onClick={handleManage} disabled={loadingPortal}>
-                  {loadingPortal && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                  Manage Subscription
-                </Button>
-                <Button variant="ghost" size="sm" className="flex-1 text-muted-foreground" onClick={handleManage} disabled={loadingPortal}>
-                  <CreditCard className="h-4 w-4 mr-1.5" />
-                  Update Payment
-                </Button>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="rounded-lg bg-muted p-4 text-center space-y-2">
-                <p className="text-sm text-muted-foreground">
-                  You're on the free plan. Upgrade to Pro for full suburb analysis, comparisons, and shortlisting.
-                </p>
-              </div>
-              <Button className="w-full" onClick={() => navigate("/pricing")}>
-                <Crown className="h-4 w-4 mr-1.5" />
-                View Pricing
-              </Button>
-            </>
-          )}
-        </CardContent>
-      </Card>
+
+
 
       {/* Notification preferences */}
       <AlertPreferencesCard />
