@@ -1,60 +1,23 @@
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { User, LogOut, Crown, Loader2, CreditCard, Mail, Calendar, Shield } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { useEffect, useState } from "react";
+import { User, LogOut, Mail, Calendar, Shield } from "lucide-react";
 import AlertPreferencesCard from "@/components/AlertPreferencesCard";
 
-const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
-  active: { label: "Pro Active", variant: "default" },
-  past_due: { label: "Past Due", variant: "destructive" },
-  canceled: { label: "Cancelled", variant: "secondary" },
-};
-
 const Account = () => {
-  const { user, signOut, subscribed, subscriptionEnd, cancelAtPeriodEnd, subscriptionStatus, refreshSubscription } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const [loadingPortal, setLoadingPortal] = useState(false);
-
-  useEffect(() => {
-    if (searchParams.get("checkout") === "success") {
-      toast.success("Subscription activated! Welcome to PropertyMate Pro.");
-      refreshSubscription();
-    }
-  }, [searchParams, refreshSubscription]);
 
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
   };
 
-  const handleManage = async () => {
-    setLoadingPortal(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("customer-portal");
-      if (error) throw error;
-      if (data?.url) window.open(data.url, "_blank");
-    } catch (err: any) {
-      toast.error(err.message || "Failed to open portal");
-    } finally {
-      setLoadingPortal(false);
-    }
-  };
-
-  const statusInfo = statusConfig[subscriptionStatus] || null;
-
-  const dateLabel = cancelAtPeriodEnd
-    ? `Cancels on ${subscriptionEnd ? new Date(subscriptionEnd).toLocaleDateString("en-AU", { day: "numeric", month: "long", year: "numeric" }) : "—"}`
-    : `Renews on ${subscriptionEnd ? new Date(subscriptionEnd).toLocaleDateString("en-AU", { day: "numeric", month: "long", year: "numeric" }) : "—"}`;
-
   const memberSince = user?.created_at
     ? new Date(user.created_at).toLocaleDateString("en-AU", { month: "long", year: "numeric" })
     : null;
+
 
   return (
     <div className="container max-w-lg py-10 md:py-20 px-4 sm:px-6 space-y-5">
