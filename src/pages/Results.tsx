@@ -281,23 +281,33 @@ const Results = () => {
     return true;
   }, []);
 
-  // Load existing shortlists
+  // Load existing shortlists (DB when signed in, localStorage for guests)
   useEffect(() => {
-    if (!user) return;
-    
     const loadShortlists = async () => {
+      if (!user) {
+        try {
+          const raw = localStorage.getItem(GUEST_SHORTLIST_KEY);
+          const ids: string[] = raw ? JSON.parse(raw) : [];
+          if (isMountedRef.current) setShortlisted(new Set(ids));
+        } catch {
+          /* ignore */
+        }
+        return;
+      }
+
       const { data } = await supabase
         .from("shortlists")
         .select("suburb_result_id")
         .eq("user_id", user.id);
-      
+
       if (data && isMountedRef.current) {
         setShortlisted(new Set(data.map((s) => s.suburb_result_id)));
       }
     };
-    
+
     loadShortlists();
   }, [user]);
+
 
   // Priority-based loading with race condition prevention
   useEffect(() => {
