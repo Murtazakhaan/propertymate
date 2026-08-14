@@ -69,6 +69,9 @@ interface PropertyListing {
 
 type SortOption = "match" | "price-low" | "price-high" | "growth";
 
+const GUEST_SHORTLIST_KEY = "shortlist:guest";
+
+
 const fmtPriceBand = (l: PropertyListing) => {
   if (l.price_min != null && l.price_max != null) {
     return `$${(l.price_min / 1000).toFixed(0)}k–$${(l.price_max / 1000).toFixed(0)}k`;
@@ -281,23 +284,33 @@ const Results = () => {
     return true;
   }, []);
 
-  // Load existing shortlists
+  // Load existing shortlists (DB when signed in, localStorage for guests)
   useEffect(() => {
-    if (!user) return;
-    
     const loadShortlists = async () => {
+      if (!user) {
+        try {
+          const raw = localStorage.getItem(GUEST_SHORTLIST_KEY);
+          const ids: string[] = raw ? JSON.parse(raw) : [];
+          if (isMountedRef.current) setShortlisted(new Set(ids));
+        } catch {
+          /* ignore */
+        }
+        return;
+      }
+
       const { data } = await supabase
         .from("shortlists")
         .select("suburb_result_id")
         .eq("user_id", user.id);
-      
+
       if (data && isMountedRef.current) {
         setShortlisted(new Set(data.map((s) => s.suburb_result_id)));
       }
     };
-    
+
     loadShortlists();
   }, [user]);
+
 
   // Priority-based loading with race condition prevention
   useEffect(() => {
@@ -402,11 +415,27 @@ const Results = () => {
   };
 
   const toggleShortlist = useCallback(async (suburbId: string) => {
+    const isShortlisted = shortlisted.has(suburbId);
+
+    // Guests: keep the shortlist in this browser
     if (!user) {
-      toast({ title: "Sign in required", description: "Please sign in to save suburbs." });
+      setShortlisted((prev) => {
+        const next = new Set(prev);
+        isShortlisted ? next.delete(suburbId) : next.add(suburbId);
+        try {
+          localStorage.setItem(GUEST_SHORTLIST_KEY, JSON.stringify([...next]));
+        } catch {
+          /* ignore quota errors */
+        }
+        return next;
+      });
+      toast({
+        title: isShortlisted ? "Removed from shortlist" : "Added to shortlist",
+        description: isShortlisted ? undefined : "Sign in to sync your shortlist across devices.",
+      });
       return;
     }
-    const isShortlisted = shortlisted.has(suburbId);
+
     if (isShortlisted) {
       await supabase.from("shortlists").delete().eq("user_id", user.id).eq("suburb_result_id", suburbId);
       setShortlisted((prev) => {
@@ -421,6 +450,7 @@ const Results = () => {
       toast({ title: "Added to shortlist" });
     }
   }, [user, shortlisted, toast]);
+
 
   const toggleListings = (id: string) => {
     setExpandedListings((prev) => {

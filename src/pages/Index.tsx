@@ -5,7 +5,6 @@ import {
   Database, BookOpen, TrendingUp, ArrowRight, Shield, Sparkles,
   MapPin, Users, BarChart3, CheckCircle2, Bell, FileText,
 } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
 
 const valueProps = [
   {
@@ -48,7 +47,6 @@ const features = [
 ];
 
 const Index = () => {
-  const { user } = useAuth();
 
   return (
     <div className="flex flex-col">
@@ -66,7 +64,7 @@ const Index = () => {
               PropertyMate gives you the top 3 high-growth Australian suburbs and matching listings — backed by government, infrastructure, and live market data. No $10,000 buyer's agent fees.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 animate-fade-in" style={{ animationDelay: "0.3s" }}>
-              <Link to={user ? "/quiz" : "/login"}>
+              <Link to="/quiz">
                 <Button size="lg" className="text-base px-8 py-6 font-semibold w-full sm:w-auto">
                   Find My Top 3 Suburbs
                   <ArrowRight className="ml-2 h-5 w-5" />
@@ -169,7 +167,7 @@ const Index = () => {
             ))}
           </div>
           <div className="text-center mt-10 md:mt-12">
-            <Link to={user ? "/quiz" : "/login"}>
+            <Link to="/quiz">
               <Button size="lg" className="font-semibold">
                 Find My Top 3 Suburbs
                 <ArrowRight className="ml-2 h-5 w-5" />

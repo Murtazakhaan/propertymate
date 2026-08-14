@@ -302,7 +302,7 @@ export const useResults = () => {
     // No valid state
     setLoadingState("idle");
     setError("no-quiz");
-  }, [sid, answers.goal, answers.timeline, user, searchParams, readCache, loadFromSubmission, fetchResults, loadLatestSubmission]);
+  }, [answers.goal, answers.timeline, user, searchParams, readCache, loadFromSubmission, fetchResults, loadLatestSubmission]);
 
   // Cleanup on unmount
   useEffect(() => {
