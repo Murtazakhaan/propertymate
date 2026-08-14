@@ -415,11 +415,27 @@ const Results = () => {
   };
 
   const toggleShortlist = useCallback(async (suburbId: string) => {
+    const isShortlisted = shortlisted.has(suburbId);
+
+    // Guests: keep the shortlist in this browser
     if (!user) {
-      toast({ title: "Sign in required", description: "Please sign in to save suburbs." });
+      setShortlisted((prev) => {
+        const next = new Set(prev);
+        isShortlisted ? next.delete(suburbId) : next.add(suburbId);
+        try {
+          localStorage.setItem(GUEST_SHORTLIST_KEY, JSON.stringify([...next]));
+        } catch {
+          /* ignore quota errors */
+        }
+        return next;
+      });
+      toast({
+        title: isShortlisted ? "Removed from shortlist" : "Added to shortlist",
+        description: isShortlisted ? undefined : "Sign in to sync your shortlist across devices.",
+      });
       return;
     }
-    const isShortlisted = shortlisted.has(suburbId);
+
     if (isShortlisted) {
       await supabase.from("shortlists").delete().eq("user_id", user.id).eq("suburb_result_id", suburbId);
       setShortlisted((prev) => {
@@ -434,6 +450,7 @@ const Results = () => {
       toast({ title: "Added to shortlist" });
     }
   }, [user, shortlisted, toast]);
+
 
   const toggleListings = (id: string) => {
     setExpandedListings((prev) => {
