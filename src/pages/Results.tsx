@@ -69,6 +69,9 @@ interface PropertyListing {
 
 type SortOption = "match" | "price-low" | "price-high" | "growth";
 
+const GUEST_SHORTLIST_KEY = "shortlist:guest";
+
+
 const fmtPriceBand = (l: PropertyListing) => {
   if (l.price_min != null && l.price_max != null) {
     return `$${(l.price_min / 1000).toFixed(0)}k–$${(l.price_max / 1000).toFixed(0)}k`;
