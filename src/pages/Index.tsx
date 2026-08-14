@@ -5,7 +5,6 @@ import {
   Database, BookOpen, TrendingUp, ArrowRight, Shield, Sparkles,
   MapPin, Users, BarChart3, CheckCircle2, Bell, FileText,
 } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
 
 const valueProps = [
   {
@@ -48,7 +47,6 @@ const features = [
 ];
 
 const Index = () => {
-  const { user } = useAuth();
 
   return (
     <div className="flex flex-col">
