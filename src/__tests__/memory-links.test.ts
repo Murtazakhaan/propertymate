@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-// @ts-expect-error - plain JS check script without types
 import { findDanglingMemLinks } from "../../scripts/check-memory-links.mjs";
 
 describe("project memory documentation", () => {
